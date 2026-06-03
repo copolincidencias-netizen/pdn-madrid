@@ -12,6 +12,33 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{--navy:#1a2744;--navy-l:#243560;--navy-d:#0f1a2e;--gold:#c8a84b;--gold-l:#e2c97a;--gold-d:#8a7030;--white:#f5f4f0;--muted:#8a9bb8;--border:rgba(200,168,75,0.2);--r:8px;--rl:14px;--font:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+body.modo-dia{--navy:#e8eaf0;--navy-l:#ffffff;--navy-d:#f0f2f7;--gold:#1a5276;--gold-l:#2471a3;--gold-d:#1a3a5c;--white:#1a2744;--muted:#5d7290;--border:rgba(26,82,118,0.2)}
+body.modo-dia .hdr{background:#1a2744}
+body.modo-dia .hdr .hdr-text h1,body.modo-dia .hdr .hdr-text p{color:#f5f4f0}
+body.modo-dia .hdr .hdr-badge{background:#c8a84b;color:#0f1a2e}
+body.modo-dia .tabs{background:#1a2744;border-color:rgba(200,168,75,0.3)}
+body.modo-dia .tab{color:rgba(255,255,255,0.5)}
+body.modo-dia .tab.active{color:#c8a84b;border-bottom-color:#c8a84b}
+body.modo-dia .bbar{background:rgba(232,234,240,0.97);border-color:rgba(26,82,118,0.2)}
+body.modo-dia .field input,body.modo-dia .field select,body.modo-dia .field textarea{background:#ffffff;border-color:rgba(26,82,118,0.2);color:#1a2744}
+body.modo-dia .field label{color:#5d7290}
+body.modo-dia .sec{border-color:rgba(26,82,118,0.08)}
+body.modo-dia .sec-lbl{color:#1a5276}
+body.modo-dia .inc-card{background:#ffffff;border-color:rgba(26,82,118,0.15)}
+body.modo-dia .inc-hdr{background:rgba(26,82,118,0.06);border-color:rgba(26,82,118,0.15)}
+body.modo-dia .inc-hdr span{color:#1a5276}
+body.modo-dia .eitem{background:#ffffff;border-color:rgba(26,82,118,0.1)}
+body.modo-dia .eitem label{color:#5d7290}
+body.modo-dia .eitem input{background:#f0f2f7;color:#1a5276;border-color:rgba(26,82,118,0.2)}
+body.modo-dia .pcard{background:#ffffff;border-color:rgba(26,82,118,0.15)}
+body.modo-dia .pcard h3{color:#1a2744}
+body.modo-dia .pcard p{color:#5d7290}
+body.modo-dia .pbadge{background:rgba(26,82,118,0.1);color:#1a5276;border-color:rgba(26,82,118,0.2)}
+body.modo-dia .abtn{color:#5d7290;border-color:rgba(26,82,118,0.2)}
+body.modo-dia .btn-s{background:#ffffff;border-color:rgba(26,82,118,0.2);color:#1a2744}
+body.modo-dia .btn-p{background:#1a5276;color:#ffffff}
+body.modo-dia .sc-guard{background:#f0f2f7}
+body.modo-dia #btn-tema{background:#1a2744;color:#c8a84b}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--navy-d);color:var(--white)}
 #app{height:100%;display:flex;flex-direction:column}
@@ -124,6 +151,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
         <div class="hdr-text"><h1>Policía Municipal Madrid</h1><p>PARTE DIARIO DE NOVEDADES</p></div>
       </div>
       <div style="display:flex;gap:8px">
+        <button class="icon-btn" id="btn-tema" onclick="toggleTema()" title="Cambiar tema">☀️</button>
         <button class="icon-btn" onclick="nuevoF()">✚</button>
         <button class="icon-btn" onclick="showG()">☰</button>
       </div>
@@ -145,12 +173,18 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
           <div class="field"><label>Nº vehículo</label><input id="f-veh" type="text" placeholder="6127"></div>
         </div>
         <div class="r2">
+          <div class="field"><label>Eq. transmisión (nº)</label><input id="f-transmision" type="text" placeholder="Nº transm."></div>
+          <div class="field"><label>Impresora (nº)</label><input id="f-impresora" type="text" placeholder="Nº impr."></div>
+        </div>
+        <div class="field"><label>Taser (nº)</label><input id="f-taser" type="text" placeholder="Nº taser"></div>
+        <div class="r2">
           <div class="field"><label>Fecha</label><input id="f-fecha" type="date"></div>
           <div class="field"><label>Turno</label>
             <select id="f-turno"><option value="">— Seleccionar —</option><option value="Mañana (07:00–15:00)">Mañana (07:00–15:00)</option><option value="Solape (14:00–22:00)">Solape (14:00–22:00)</option><option value="Tarde (15:00–23:00)">Tarde (15:00–23:00)</option><option value="Noche (22:00–08:00)">Noche (22:00–08:00)</option></select>
           </div>
         </div>
         <div class="field"><label>Servicio asignado</label><input id="f-serv" type="text" placeholder="Ej: Servicio ordinario Distrito Centro"></div>
+
       </div>
       <div class="sec"><div class="sec-lbl">Composición de la patrulla</div>
         <div class="field"><label>Jefe de equipo (nº carné)</label><input id="f-jefe" type="text" placeholder="10567"></div>
@@ -158,6 +192,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
         <div class="field"><label>Agente 3 (nº carné)</label><input id="f-ag3" type="text" placeholder="12321"></div>
         <div class="field"><label>Agente 4 (nº carné)</label><input id="f-ag4" type="text" placeholder="Opcional"></div>
       </div>
+
     </div>
 
     <div id="tab-inc" style="display:none">
@@ -277,7 +312,16 @@ const B64_COORD = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAG4AAAA3CAIAAAB
 // ── Estado ────────────────────────────────────────────────────────────────────
 let partes = JSON.parse(localStorage.getItem('pdn_v5')||'[]');
 let editId = null, incN = 0;
-window.addEventListener('load',()=>{setToday();addInc();});
+window.addEventListener('load',()=>{
+  setToday();
+  addInc();
+  // Restaurar tema guardado
+  if(localStorage.getItem('pdn_tema')==='dia'){
+    document.body.classList.add('modo-dia');
+    const btn=document.getElementById('btn-tema');
+    if(btn){btn.textContent='🌙';btn.title='Modo noche';}
+  }
+});
 
 // ── UI helpers ────────────────────────────────────────────────────────────────
 const TABS=['id','inc','est','cie'];
@@ -330,7 +374,7 @@ function addInc(data){
         </div>
       </div>
       <div class="field"><label>Documentos generados</label>
-        <select id="i${n}_do">
+        <select id="i${n}_do" onchange="toggleOtros('i${n}_do','otros-wrap-${n}')">
           <option value="">Ninguno</option>
           <option ${data&&data.docs==='Parte de grúas'?'selected':''}>Parte de grúas</option>
           <option ${data&&data.docs==='Acta de inspección'?'selected':''}>Acta de inspección</option>
@@ -338,7 +382,12 @@ function addInc(data){
           <option ${data&&data.docs==='Parte de auxilio'?'selected':''}>Parte de auxilio</option>
           <option ${data&&data.docs==='Minuta'?'selected':''}>Minuta</option>
           <option ${data&&data.docs==='Informe ampliatorio'?'selected':''}>Informe ampliatorio</option>
+          <option ${data&&data.docs==='Otros'?'selected':''}>Otros</option>
         </select>
+      </div>
+      <div class="field" id="otros-wrap-${n}" style="display:${data&&data.docs==='Otros'?'block':'none'}">
+        <label>Especificar documento</label>
+        <input type="text" id="i${n}_otros" placeholder="Nombre del documento..." value="${data?esc(data.otros||''):''}">
       </div>
     </div>`;
   c.appendChild(d);
@@ -350,8 +399,10 @@ function getData(){
   const incs=[];
   document.querySelectorAll('[id^="inc-"]').forEach(el=>{
     const n=el.id.replace('inc-','');
+    const docsVal=g('i'+n+'_do');
+    const otrosVal=docsVal==='Otros'?g('i'+n+'_otros'):'';
     incs.push({hi:g('i'+n+'_hi'),hf:g('i'+n+'_hf'),lugar:g('i'+n+'_lu'),
-               origen:g('i'+n+'_or'),desc:g('i'+n+'_de'),docs:g('i'+n+'_do')});
+               origen:g('i'+n+'_or'),desc:g('i'+n+'_de'),docs:docsVal,otros:otrosVal});
   });
   const mat=[],matN=['Linterna','3 Conos','Capuchón','Guía Callejero','Extintor','Señaliz. Alcohol','Triángulos','Carpeta','l Señal luminosa Azul (Veh. Camuflados)'];
   for(let i=1;i<=9;i++){const e=document.getElementById('m'+i);if(e&&e.checked)mat.push(matN[i-1]);}
@@ -361,6 +412,8 @@ function getData(){
     jefe:g('f-jefe'),ag2:g('f-ag2'),ag3:g('f-ag3'),ag4:g('f-ag4'),
     incidencias:incs,material:mat,obsVeh:g('f-obs-veh'),obs:g('f-obs'),
     firma:g('f-firma'),jefeTurno:g('f-jturno'),horaInicio:g('f-hi'),horaFin:g('f-hf'),
+    transmision:g('f-transmision'),impresora:g('f-impresora'),taser:g('f-taser'),
+    formato:g('f-formato'),
     // Estadillo
     a1e1:g('a1e1'),a1e2:g('a1e2'),a1e3:g('a1e3'),
     a2e1:g('a2e1'),a2e2:g('a2e2'),a2e3:g('a2e3'),
@@ -386,6 +439,8 @@ function cargar(id){
   s('f-uni',p.unidad);s('f-pat',p.patrulla);s('f-veh',p.vehiculo);
   s('f-fecha',p.fecha);s('f-turno',p.turno||'');s('f-serv',p.servicio);
   s('f-jefe',p.jefe);s('f-ag2',p.ag2);s('f-ag3',p.ag3);s('f-ag4',p.ag4);
+  s('f-transmision',p.transmision);s('f-impresora',p.impresora);s('f-taser',p.taser);
+  if(p.formato) setFormato(p.formato); else { document.getElementById('f-formato').value=''; }
   s('f-obs',p.obs);s('f-obs-veh',p.obsVeh);s('f-firma',p.firma);
   s('f-jturno',p.jefeTurno);s('f-hi',p.horaInicio);s('f-hf',p.horaFin);
   ['a1e1','a1e2','a1e3','a2e1','a2e2','a2e3',
@@ -409,9 +464,11 @@ function nuevoF(){
   editId=null;
   document.getElementById('f-uni').value='C.I.D. ARGANZUELA';
   document.getElementById('f-pat').value='P-02';
-  ['f-veh','f-serv','f-jefe','f-ag2','f-ag3','f-ag4',
+  ['f-veh','f-serv','f-jefe','f-ag2','f-ag3','f-ag4','f-transmision','f-impresora','f-taser',
    'f-obs','f-obs-veh','f-firma','f-jturno','f-hi','f-hf'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.getElementById('f-turno').value='';
+  document.getElementById('f-formato').value='';
+  ['btn-dia','btn-noche'].forEach(id=>{const b=document.getElementById(id);if(b){b.style.background='rgba(255,255,255,0.04)';b.style.color='var(--muted)';b.style.borderColor='rgba(200,168,75,0.3)';}});
   ['a1e1','a1e2','a1e3','a2e1','a2e2','a2e3',
    'e_vg','e_rv','e_ic','e_det','e_ap','e_va','e_ca','e_pos','e_neg',
    'e_ie','e_bomb','e_le','e_idv','e_idp','e_at','e_sim','e_dro','e_arm'
@@ -522,9 +579,9 @@ function _buildPDF(doc,p){
     // Logo iMADRID: 155×51px → proporcional a 20mm ancho
     doc.addImage(B64_IM0,'PNG', LM, 3, 28, 28*55/105,'','FAST');
     // Texto "ÁREA DE GOBIERNO..."
-    txt('ÁREA DE GOBIERNO', LM+30, 9,  {bold:true, sz:7, color:C_NAVY});
-    txt('DE SEGURIDAD',     LM+30, 12.5,{bold:true, sz:7, color:C_NAVY});
-    txt('Y MOVILIDAD',      LM+30, 16,  {bold:true, sz:7, color:C_NAVY});
+    txt('ÁREA DE GOBIERNO', LM+30, 9,  {bold:true, sz:10, color:C_NAVY});
+    txt('DE SEGURIDAD',     LM+30, 12.5,{bold:true, sz:10, color:C_NAVY});
+    txt('Y MOVILIDAD',      LM+30, 16,  {bold:true, sz:10, color:C_NAVY});
     // Logo Coord. General: 378×102px → 43mm ancho proporcional
     doc.addImage(B64_COORD,'PNG', RM-36, 2, 35, 35*55/110,'','FAST');
     // Línea separadora
@@ -537,7 +594,7 @@ function _buildPDF(doc,p){
               'Telf.: 91 513 31 61 / Fax: 91 480 44 84','exprocnormas@pm.madrid'];
     fl.forEach((l,i)=>doc.text(l,PH/2,263+i*2.9,{align:'center'}));
     // Nº página (arriba derecha)
-    setTxt(...C_BLACK); doc.setFontSize(6.5);
+    setTxt(...C_BLACK); doc.setFontSize(8);
     doc.text(`Página ${pageN} de ${total}`, RM, 5, {align:'right'});
   }
 
@@ -545,7 +602,7 @@ function _buildPDF(doc,p){
   function drawFormCabecera(){
     // Borde exterior de la caja del formulario
     setDraw(...C_BLACK); setLW(0.4);
-    doc.rect(LM, 33, PW, 54, 'S');  // caja completa cabecera hasta inicio tabla
+    doc.rect(LM, 33, PW, TABLA_TOP-33, 'S');  // caja completa cabecera hasta inicio tabla
 
     // Logo iMADRID interno (dentro de la caja)
     doc.addImage(B64_IM0,'PNG', LM+2, 34.5, 22, 22*51/155,'','FAST');
@@ -561,39 +618,50 @@ function _buildPDF(doc,p){
     fillRect(RM-5,  42, 5, 5,  26, 55, 120);
 
     // Línea "Unidad ___"
-    txt('Unidad', LM+2, 52, {sz:7.5});
+    txt('Unidad', LM+2, 52, {sz:10});
     hline(LM+16, 52, LM+65, 0.3);
     // Campo unidad (dato)
     txt(p.unidad||'', LM+17, 51.2, {sz:8});
 
     // Línea "Fecha ___" (centrada)
-    txt('Fecha', LM+50, 60, {sz:7.5});
+    txt('Fecha', LM+50, 60, {sz:10});
     hline(LM+62, 60, LM+130, 0.3);
     txt(p.fecha||'', LM+63, 59.2, {sz:8});
 
     // Línea "Patrulla ___ Servicio asignado ___"
-    txt('Patrulla', LM+2, 68, {sz:7.5});
+    txt('Patrulla', LM+2, 68, {sz:10});
     const patVeh = (p.patrulla||'') + (p.vehiculo ? '  Veh. '+p.vehiculo : '');
     hline(LM+18, 68, LM+80, 0.3);
     txt(patVeh, LM+19, 67.2, {sz:8});
+    // Material asignado y formato bajo la línea de patrulla
+    const matInfo=[];
+    if(p.transmision) matInfo.push('Trans.: '+p.transmision);
+    if(p.impresora)   matInfo.push('Imp.: '+p.impresora);
+    if(p.taser)       matInfo.push('Taser: '+p.taser);
+    if(p.formato)     matInfo.push('Formato: '+p.formato);
+    if(matInfo.length>0){
+      txt(matInfo.join('   |   '), LM+2, 72.5, {sz:7.5, color:[80,80,80]});
+    }
 
-    txt('Servicio asignado', LM+82, 68, {sz:7.5});
+    txt('Servicio asignado', LM+82, 68, {sz:10});
     hline(LM+112, 68, PW+LM-1, 0.3);
     txt(p.servicio||'', LM+113, 67.2, {sz:8});
 
     // Banda gris "PARTE DIARIO DE NOVEDADES"
-    fillRect(LM, 71, PW, 7, ...C_GRAY_BAND);
-    setDraw(...C_BLACK); setLW(0.3); doc.rect(LM,71,PW,7,'S');
-    txt('PARTE  DIARIO  DE  NOVEDADES', LM+PW/2, 76, {bold:true, sz:8, align:'center', color:C_BLACK});
+    const bandaY = matInfoExists ? 76 : 71;
+    fillRect(LM, bandaY, PW, 7, ...C_GRAY_BAND);
+    setDraw(...C_BLACK); setLW(0.3); doc.rect(LM,bandaY,PW,7,'S');
+    txt('PARTE  DIARIO  DE  NOVEDADES', LM+PW/2, bandaY+5, {bold:true, sz:8, align:'center', color:C_BLACK});
 
     // Cabecera tabla (fondo gris oscuro)
-    fillRect(LM, 78, PW, 6, ...C_GRAY_HDR);
-    setDraw(...C_BLACK); setLW(0.3); doc.rect(LM,78,PW,6,'S');
-    txt('HORA',                         CX_H+CW_H/2,   82, {bold:true, sz:7.5, align:'center'});
-    txt('LUGAR',                        CX_L+CW_L/2,   82, {bold:true, sz:7.5, align:'center'});
-    txt('INCIDENCIA O HECHO OCURRIDO',  CX_I+CW_I/2,   82, {bold:true, sz:7.5, align:'center'});
+    const cabeceraY = bandaY + 7;
+    fillRect(LM, cabeceraY, PW, 6, ...C_GRAY_HDR);
+    setDraw(...C_BLACK); setLW(0.3); doc.rect(LM,cabeceraY,PW,6,'S');
+    txt('HORA',                         CX_H+CW_H/2,   cabeceraY+4, {bold:true, sz:10, align:'center'});
+    txt('LUGAR',                        CX_L+CW_L/2,   cabeceraY+4, {bold:true, sz:10, align:'center'});
+    txt('INCIDENCIA O HECHO OCURRIDO',  CX_I+CW_I/2,   cabeceraY+4, {bold:true, sz:10, align:'center'});
     // Separadores columnas en cabecera
-    vline(CX_L, 78, 84, 0.3); vline(CX_I, 78, 84, 0.3);
+    vline(CX_L, cabeceraY, cabeceraY+6, 0.3); vline(CX_I, cabeceraY, cabeceraY+6, 0.3);
   }
 
   // ── Calcular altura de fila ───────────────────────────────────────────────
@@ -609,7 +677,8 @@ function _buildPDF(doc,p){
     const p2=[];
     if(inc.origen) p2.push('['+inc.origen+']');
     if(inc.desc)   p2.push(inc.desc);
-    if(inc.docs&&inc.docs!=='Ninguno') p2.push('[Doc: '+inc.docs+']');
+    const docLabel=inc.docs==='Otros'&&inc.otros?'Otros: '+inc.otros:inc.docs;
+    if(docLabel&&docLabel!=='Ninguno') p2.push('[Doc: '+docLabel+']');
     return p2.join(' ');
   }
 
@@ -656,13 +725,13 @@ function _buildPDF(doc,p){
     const ev = k => { const v=p[k]; return (v&&v!=='0'&&v!==0)?String(v):''; };
 
     // ── Bloque RESUMEN ────────────────────────────────────────────────────
-    txt('RESUMEN DE LO ACTUADO: ', LM, y+4, {sz:7});
-    txt('A CUMPLIMENTAR DIARIAMENTE POR EL JEFE DE EQUIPO', LM+38, y+4, {bold:true, sz:7});
+    txt('RESUMEN DE LO ACTUADO:', LM, y+4, {sz:8});
+    txt('A CUMPLIMENTAR DIARIAMENTE POR EL JEFE DE EQUIPO', LM, y+9, {bold:true, sz:8});
 
-    y+=7;
-    txt('JEFE DE EQUIPO', LM, y+4, {sz:7});
+    y+=12;
+    txt('JEFE DE EQUIPO', LM, y+4, {sz:10});
     hline(LM+28, y+4, LM+90, 0.3); // línea firma jefe
-    txt(p.firma||'', LM+30, y+3, {sz:7.5});
+    txt(p.firma||'', LM+30, y+3, {sz:10});
     y+=8;
 
     // Dos bloques de agente lado a lado
@@ -670,17 +739,17 @@ function _buildPDF(doc,p){
     function bloqueAgente(xBase, nCarnet, d1, d2, d3){
       const bw=14; // ancho de las cajas
       txt('AGENTE NÚMERO', xBase, y, {sz:6.5});
-      rect(xBase+28, y-3.5, bw, 4.5, 'S', 0.3); // caja nº carnet
-      txt(nCarnet||'', xBase+29, y-0.5, {sz:7});
+      rect(xBase+28, y-3.5, bw+4, 4.5, 'S', 0.3); // caja nº carnet
+      txt(nCarnet||'', xBase+29, y-0.5, {sz:8});
       txt('DENUNCIAS DE TRÁFICO NOTIFICADAS',   xBase, y+5.5, {sz:6.5});
       rect(xBase+50, y+2,   bw, 4.5, 'S', 0.3);
-      if(d1) txt(d1, xBase+51, y+5.5, {sz:7});
+      if(d1) txt(d1, xBase+52, y+5.5, {sz:8});
       txt('DENUNCIAS DE TRÁFICO SIN NOTIFICAR', xBase, y+11,  {sz:6.5});
       rect(xBase+50, y+7.5, bw, 4.5, 'S', 0.3);
-      if(d2) txt(d2, xBase+51, y+11,  {sz:7});
+      if(d2) txt(d2, xBase+52, y+11,  {sz:8});
       txt('DENUNCIAS DE OO.MM.',                xBase, y+16.5, {sz:6.5});
       rect(xBase+50, y+13,  bw, 4.5, 'S', 0.3);
-      if(d3) txt(d3, xBase+51, y+16.5, {sz:7});
+      if(d3) txt(d3, xBase+51, y+16.5, {sz:10});
     }
     bloqueAgente(LM,      p.jefe, ev('a1e1'), ev('a1e2'), ev('a1e3'));
     bloqueAgente(LM+half, p.ag2,  ev('a2e1'), ev('a2e2'), ev('a2e3'));
@@ -688,7 +757,7 @@ function _buildPDF(doc,p){
     y+=20;
     // Firma
     hline(LM+PW/2-25, y+2, LM+PW/2+25, 0.3);
-    txt('FIRMA DEL JEFE DE EQUIPO', LM+PW/2, y+6, {sz:7, align:'center'});
+    txt('FIRMA DEL JEFE DE EQUIPO', LM+PW/2, y+6, {sz:10, align:'center'});
     y+=14;
 
     // ── Tabla actividad (2 columnas) ───────────────────────────────────────
@@ -728,23 +797,23 @@ function _buildPDF(doc,p){
     leftRows.forEach(([lbl,val,small],i)=>{
       const ry=y+i*rh;
       hline(LM, ry, RM, 0.2, [180,180,180]);
-      doc.setFontSize(7.5); setTxt(...C_BLACK);
+      doc.setFontSize(10); setTxt(...C_BLACK);
       doc.setFont('helvetica','normal');
       doc.text(lbl, LM+1.5, ry+rh-1.2);
       // caja valor izq
       const bx=col2x-bw-1;
       rect(bx, ry+0.5, bw, rh-1, 'S', 0.25);
-      if(val) txt(val, bx+bw/2, ry+rh-1.5, {sz:7, align:'center'});
+      if(val) txt(val, bx+bw/2, ry+rh-1.5, {sz:10, align:'center'});
     });
     rightRows.forEach(([lbl,val],i)=>{
       const ry=y+i*rh;
       hline(col2x, ry, RM, 0.2, [180,180,180]);
-      doc.setFontSize(6.5); setTxt(...C_BLACK); doc.setFont('helvetica','normal');
+      doc.setFontSize(8); setTxt(...C_BLACK); doc.setFont('helvetica','normal');
       doc.text(lbl, col2x+1.5, ry+rh-1.2);
       // caja valor der
       const bx=RM-bw-1;
       rect(bx, ry+0.5, bw, rh-1, 'S', 0.25);
-      if(val) txt(val, bx+bw/2, ry+rh-1.5, {sz:7, align:'center'});
+      if(val) txt(val, bx+bw/2, ry+rh-1.5, {sz:10, align:'center'});
     });
 
     y+=tah+2;
@@ -790,21 +859,21 @@ function _buildPDF(doc,p){
       hline(LM, ry, RM, 0.2, [160,160,160]);
       [mc[1],mc[2],mc[3],mc[4],mc[5],mc[6]].forEach(x=>vline(LM+x,ry,ry+mrh,0.2));
       const itemL=matL[i]||'', itemR=matR[i]||'';
-      doc.setFontSize(6); setTxt(...C_BLACK); doc.setFont('helvetica','normal');
+      doc.setFontSize(7.5); setTxt(...C_BLACK); doc.setFont('helvetica','normal');
       if(itemL) doc.text(itemL, LM+1, ry+mrh-1);
       const siL=mat.includes(itemL), noL=!siL&&!!itemL;
-      if(siL) txt('X', LM+mc[1]+(mc[2]-mc[1])/2, ry+mrh-1, {bold:true, sz:7, align:'center'});
-      if(noL) txt('X', LM+mc[2]+(mc[3]-mc[2])/2, ry+mrh-1, {bold:true, sz:7, align:'center'});
+      if(siL) txt('X', LM+mc[1]+(mc[2]-mc[1])/2, ry+mrh-1, {bold:true, sz:10, align:'center'});
+      if(noL) txt('X', LM+mc[2]+(mc[3]-mc[2])/2, ry+mrh-1, {bold:true, sz:10, align:'center'});
       if(itemR) doc.text(itemR, LM+mc[3]+1, ry+mrh-1);
       const siR=mat.includes(itemR), noR=!siR&&!!itemR;
-      if(siR) txt('X', LM+mc[4]+(mc[5]-mc[4])/2, ry+mrh-1, {bold:true, sz:7, align:'center'});
-      if(noR) txt('X', LM+mc[5]+(mc[6]-mc[5])/2, ry+mrh-1, {bold:true, sz:7, align:'center'});
+      if(siR) txt('X', LM+mc[4]+(mc[5]-mc[4])/2, ry+mrh-1, {bold:true, sz:10, align:'center'});
+      if(noR) txt('X', LM+mc[5]+(mc[6]-mc[5])/2, ry+mrh-1, {bold:true, sz:10, align:'center'});
       // Observaciones (solo primera fila)
       if(i===0 && obsVeh){
         const ol=doc.splitTextToSize(obsVeh, PW-mc[6]-2);
         let oy=ry+mrh-1;
         ol.slice(0,Math.max(matL.length,matR.length)).forEach(l=>{
-          doc.setFontSize(5.5); doc.text(l, LM+mc[6]+1, oy); oy+=mrh;
+          doc.setFontSize(10); doc.text(l, LM+mc[6]+1, oy); oy+=mrh;
         });
       }
     }
@@ -814,23 +883,37 @@ function _buildPDF(doc,p){
   // PÁGINA 1
   // ══════════════════════════════════════════════════════════════════════════
   drawCabecera(1, 2);
+  // Definir matInfoExists ANTES de drawFormCabecera para que esté en scope
+  const matInfoExists=!!(p.transmision||p.impresora||p.taser);
+  const TABLA_TOP=matInfoExists?90:84;
   drawFormCabecera();
 
-  // Tabla incidencias: y=84 (justo bajo cabecera tabla)
-  const TABLA_TOP=84;
+  // Tabla incidencias
   const FOOTER_Y=261; // donde empieza el footer
 
-  const incs=p.incidencias||[];
-  let r1=[], r2=[], yAcc=TABLA_TOP;
+  // Filtrar incidencias que no tienen contenido real
+  const incs=(p.incidencias||[]).filter(i=>i.hi||i.hf||i.lugar||i.desc);
+  const rhFijaCalc = Math.max(10, 1*5.0+4); // mismo valor que rhFija
+  let r1=[], r2=[], yAcc=TABLA_TOP+rhFijaCalc; // empezar después de la fila fija
   incs.forEach(inc=>{
     const rh=rowH(inc);
     if(yAcc+rh<=FOOTER_Y-2){r1.push([inc,rh]);yAcc+=rh;}
     else r2.push([inc,rh]);
   });
 
+  // Fila fija de asignación de servicio
+  const horaAsig = p.turno ? p.turno.match(/\d{2}:\d{2}/)?.[0]||'22:00' : '22:00';
+  const incFija = {
+    hi: horaAsig, hf: '',
+    lugar: 'C.I.D. ARGANZUELA',
+    origen: '', desc: 'ASIGNACIÓN DE SERVICIO', docs: ''
+  };
+  // Fila fija con altura mínima reducida (solo 1 línea de texto)
+  const rhFija = Math.max(10, 1*5.0+4); // altura mínima para 1 línea
   let yCur=TABLA_TOP;
+  drawRow(incFija, yCur, rhFija); yCur+=rhFija;
   r1.forEach(([inc,rh])=>{drawRow(inc,yCur,rh);yCur+=rh;});
-  if(!incs.length) yCur=TABLA_TOP+100;
+  if(!incs.length) yCur=yCur; // ya tiene la fila fija
 
   // Borde exterior tabla
   drawTablaBorde(TABLA_TOP, yCur);
@@ -846,9 +929,9 @@ function _buildPDF(doc,p){
   // Cabecera tabla
   fillRect(LM, T2_TOP, PW, 6, ...C_GRAY_HDR);
   setDraw(...C_BLACK); setLW(0.3); doc.rect(LM,T2_TOP,PW,6,'S');
-  txt('HORA',                        CX_H+CW_H/2, T2_TOP+4, {bold:true, sz:7.5, align:'center'});
-  txt('LUGAR',                       CX_L+CW_L/2, T2_TOP+4, {bold:true, sz:7.5, align:'center'});
-  txt('INCIDENCIA O HECHO OCURRIDO', CX_I+CW_I/2, T2_TOP+4, {bold:true, sz:7.5, align:'center'});
+  txt('HORA',                        CX_H+CW_H/2, T2_TOP+4, {bold:true, sz:10, align:'center'});
+  txt('LUGAR',                       CX_L+CW_L/2, T2_TOP+4, {bold:true, sz:10, align:'center'});
+  txt('INCIDENCIA O HECHO OCURRIDO', CX_I+CW_I/2, T2_TOP+4, {bold:true, sz:10, align:'center'});
   vline(CX_L, T2_TOP, T2_TOP+6, 0.3); vline(CX_I, T2_TOP, T2_TOP+6, 0.3);
 
   // Calcular espacio disponible para estadillo
@@ -866,6 +949,24 @@ function _buildPDF(doc,p){
 
   // Estadillo
   drawEstadillo(yT2+3);
+
+  // ── Sección material asignado al final ──────────────────────────────────
+  const hasExtra = p.transmision||p.impresora||p.taser||p.vehiculo||p.formato;
+  if(hasExtra){
+    // Verificar espacio, si no hay añadir nueva sección con línea separadora
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); setTxt(0,0,0);
+    // Buscar posición Y actual del estadillo - añadir al final
+    // Dibujar una línea y la sección
+    const extraItems=[];
+    if(p.vehiculo)     extraItems.push('Vehículo: '+p.vehiculo);
+    if(p.transmision)  extraItems.push('Eq. Transmisión: '+p.transmision);
+    if(p.impresora)    extraItems.push('Impresora: '+p.impresora);
+    if(p.taser)        extraItems.push('Taser: '+p.taser);
+    if(p.formato)      extraItems.push('Formato: '+p.formato);
+    // Los dibujamos en el pie de la pág 1 (bajo la tabla si hay espacio)
+    // o los añadimos como nota en pág 2 tras el estadillo
+    // Por ahora los añadimos en el header de pág 1 como info extra
+  }
 
   // Guardar PDF
 }
@@ -939,6 +1040,51 @@ async function exportarYSubir(){
   }
 }
 
+
+// ── Otros documentos ────────────────────────────────────────────────────────
+// ── Tema día/noche ───────────────────────────────────────────────────────────
+function toggleTema(){
+  const body=document.body;
+  const btn=document.getElementById('btn-tema');
+  if(body.classList.contains('modo-dia')){
+    body.classList.remove('modo-dia');
+    btn.textContent='☀️';
+    btn.title='Modo día';
+    localStorage.setItem('pdn_tema','noche');
+  } else {
+    body.classList.add('modo-dia');
+    btn.textContent='🌙';
+    btn.title='Modo noche';
+    localStorage.setItem('pdn_tema','dia');
+  }
+}
+
+function setFormato(val){
+  document.getElementById('f-formato').value=val;
+  const btnDia=document.getElementById('btn-dia');
+  const btnNoche=document.getElementById('btn-noche');
+  if(val==='DÍA'){
+    btnDia.style.background='rgba(200,168,75,0.25)';
+    btnDia.style.color='var(--gold)';
+    btnDia.style.borderColor='var(--gold)';
+    btnNoche.style.background='rgba(255,255,255,0.04)';
+    btnNoche.style.color='var(--muted)';
+    btnNoche.style.borderColor='rgba(200,168,75,0.3)';
+  } else {
+    btnNoche.style.background='rgba(100,120,200,0.25)';
+    btnNoche.style.color='#8ab4f8';
+    btnNoche.style.borderColor='#8ab4f8';
+    btnDia.style.background='rgba(255,255,255,0.04)';
+    btnDia.style.color='var(--muted)';
+    btnDia.style.borderColor='rgba(200,168,75,0.3)';
+  }
+}
+
+function toggleOtros(selectId, wrapId){
+  const sel=document.getElementById(selectId);
+  const wrap=document.getElementById(wrapId);
+  if(sel&&wrap) wrap.style.display=sel.value==='Otros'?'block':'none';
+}
 
 // ── Reconocimiento de voz ─────────────────────────────────────────────────────
 let reconocimiento = null;
