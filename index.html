@@ -331,7 +331,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
 </div>
 
 <!-- PANTALLA MIS PARTES -->
-<div class="screen" id="sc-mis">
+<div class="screen" id="sc-mis" style="background:var(--navy-d)">
   <div class="hdr">
     <div class="hdr-in">
       <div class="hdr-brand">
@@ -350,7 +350,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
 </div>
 
 <!-- PANTALLA ADMINISTRADOR -->
-<div class="screen" id="sc-admin">
+<div class="screen" id="sc-admin" style="background:var(--navy-d)">
   <div class="hdr">
     <div class="hdr-in">
       <div class="hdr-brand">
@@ -383,7 +383,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
       </div>
     </div>
   </div>
-  <div id="admin-content" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+  <div id="admin-content" style="display:none;flex:1;flex-direction:column;overflow:hidden;background:var(--navy-d)">
     <div class="stat-bar" id="admin-stats"></div>
     <div class="filter-bar">
       <input id="admin-filter" type="text" placeholder="Filtrar por patrulla, agente, fecha..." oninput="filtrarAdmin()">
@@ -832,8 +832,19 @@ function setToday(){const d=new Date(),p=n=>String(n).padStart(2,'0');document.g
 function g(id){return (document.getElementById(id)||{}).value||'';}
 function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
 function toast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(type?' '+type:'')+' show';setTimeout(()=>t.className='toast',2500);}
-function showF(){document.getElementById('sc-guard').classList.remove('active');document.getElementById('sc-form').classList.add('active');}
-function showG(){renderG();document.getElementById('sc-form').classList.remove('active');document.getElementById('sc-guard').classList.add('active');}
+function showF(){
+  ['sc-guard','sc-mis','sc-admin'].forEach(id=>{
+    const e=document.getElementById(id); if(e) e.classList.remove('active');
+  });
+  document.getElementById('sc-form').classList.add('active');
+}
+function showG(){
+  renderG();
+  ['sc-form','sc-mis','sc-admin'].forEach(id=>{
+    const e=document.getElementById(id); if(e) e.classList.remove('active');
+  });
+  document.getElementById('sc-guard').classList.add('active');
+}
 
 // ── Incidencias ───────────────────────────────────────────────────────────────
 function addInc(data){
