@@ -371,8 +371,14 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
         <input id="script-url-input" type="text" placeholder="https://script.google.com/macros/s/..." 
           style="font-size:11px;letter-spacing:0;padding:8px;margin-bottom:8px"
           value="" onchange="guardarScriptUrl()">
-        <button onclick="guardarScriptUrl()" style="width:100%;padding:9px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--r);color:var(--muted);font-size:12px;cursor:pointer">
-          💾 Guardar URL
+        <button onclick="guardarScriptUrl()" style="width:100%;padding:9px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--r);color:var(--muted);font-size:12px;cursor:pointer;margin-bottom:12px">
+          💾 Guardar URL sistema
+        </button>
+        <p style="margin-bottom:8px;font-size:11px;color:var(--muted)">Token GitHub (para subir PDFs)</p>
+        <input id="gh-token-input" type="password" placeholder="github_pat_..." 
+          style="font-size:11px;letter-spacing:0;padding:8px;margin-bottom:8px">
+        <button onclick="guardarGHToken()" style="width:100%;padding:9px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--r);color:var(--muted);font-size:12px;cursor:pointer">
+          💾 Guardar Token GitHub
         </button>
       </div>
     </div>
@@ -799,6 +805,9 @@ let editId = null, incN = 0;
 window.addEventListener('load',()=>{
   setToday();
   addInc();
+  // Restaurar token GitHub
+  const savedToken = localStorage.getItem('pdn_gh_token');
+  if(savedToken) window._GH_TOKEN_SAVED = savedToken;
   // Restaurar URL del script
   const savedUrl = localStorage.getItem('pdn_script_url');
   if(savedUrl){ SCRIPT_URL=savedUrl; const inp=document.getElementById('script-url-input'); if(inp)inp.value=savedUrl; }
@@ -927,7 +936,7 @@ function cargar(id){
   s('f-fecha',p.fecha);s('f-turno',p.turno||'');s('f-serv',p.servicio);
   s('f-jefe',p.jefe);s('f-ag2',p.ag2);s('f-ag3',p.ag3);s('f-ag4',p.ag4);
   s('f-transmision',p.transmision);s('f-impresora',p.impresora);s('f-taser',p.taser);
-  if(p.formato) setFormato(p.formato); else { document.getElementById('f-formato').value=''; }
+  if(p.formato && document.getElementById('f-formato')) setFormato(p.formato);
   s('f-obs',p.obs);s('f-obs-veh',p.obsVeh);s('f-firma',p.firma);
   s('f-jturno',p.jefeTurno);s('f-hi',p.horaInicio);s('f-hf',p.horaFin);
   ['a1e1','a1e2','a1e3','a2e1','a2e2','a2e3',
@@ -1461,7 +1470,7 @@ function _buildPDF(doc,p){
 // ── GitHub ───────────────────────────────────────────────────────────────────
 const GH_USER  = 'copolincidencias-netizen';
 const GH_REPO  = 'pdn-madrid';
-const GH_TOKEN = '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';
+const GH_TOKEN = localStorage.getItem('pdn_gh_token') || '';
 const GH_BRANCH= 'main';
 
 async function exportarYSubir(){
@@ -1491,7 +1500,7 @@ async function exportarYSubir(){
     let sha;
     const check=await fetch(
       `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${fnRepo}`,
-      {headers:{'Authorization':`token ${GH_TOKEN}`,'Accept':'application/vnd.github.v3+json'}}
+      {headers:{'Authorization':`token ${ghToken}`,'Accept':'application/vnd.github.v3+json'}}
     );
     if(check.ok){const ex=await check.json();sha=ex.sha;}
 
@@ -1507,7 +1516,7 @@ async function exportarYSubir(){
       {
         method:'PUT',
         headers:{
-          'Authorization':`token ${GH_TOKEN}`,
+          'Authorization':`token ${ghToken}`,
           'Accept':'application/vnd.github.v3+json',
           'Content-Type':'application/json'
         },
@@ -1716,6 +1725,19 @@ function showAdmin(){
 // ── Login administrador ───────────────────────────────────────────────────────
 let adminLogueado = false;
 let todosPartes = [];
+
+function guardarGHToken(){
+  const token = document.getElementById('gh-token-input').value.trim();
+  if(token){
+    localStorage.setItem('pdn_gh_token', token);
+    // Actualizar la variable en memoria
+    window._GH_TOKEN_SAVED = token;
+    toast('Token GitHub guardado ✓','gold');
+    document.getElementById('gh-token-input').value='';
+  } else {
+    toast('Introduce un token válido');
+  }
+}
 
 function guardarScriptUrl(){
   const url = document.getElementById('script-url-input').value.trim();
