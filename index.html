@@ -103,6 +103,31 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
 .toast.gold{border-color:var(--gold);color:var(--gold)}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(200,168,75,.2);border-radius:2px}
 
+.search-box{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin:12px 16px}
+.search-box input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:var(--r);padding:11px 14px;font-size:16px;color:var(--white);font-family:var(--mono);text-align:center;letter-spacing:.1em}
+.search-box input:focus{outline:none;border-color:var(--gold)}
+.search-btn{width:100%;margin-top:10px;padding:13px;background:var(--gold);border:none;border-radius:var(--r);color:var(--navy-d);font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer}
+.parte-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--rl);padding:13px;margin-bottom:10px}
+.parte-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px}
+.parte-card h3{font-size:13px;font-weight:500}
+.parte-card .meta{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:4px}
+.parte-card .resumen{font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.parte-card-acts{display:flex;gap:6px}
+.admin-login{padding:40px 20px;text-align:center}
+.admin-login h2{font-size:18px;margin-bottom:8px;color:var(--gold)}
+.admin-login p{font-size:12px;color:var(--muted);margin-bottom:24px}
+.admin-login input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:var(--r);padding:13px;font-size:16px;color:var(--white);font-family:var(--mono);text-align:center;letter-spacing:.15em;margin-bottom:12px}
+.filter-bar{display:flex;gap:8px;padding:10px 16px;background:rgba(255,255,255,.02);border-bottom:1px solid var(--border)}
+.filter-bar input,.filter-bar select{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;font-size:12px;color:var(--white);font-family:var(--mono)}
+.loading{text-align:center;padding:40px;color:var(--muted)}
+.loading .spin{display:inline-block;font-size:24px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.stat-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px 16px}
+.stat-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r);padding:10px;text-align:center}
+.stat-item .num{font-size:22px;font-weight:600;color:var(--gold);font-family:var(--mono)}
+.stat-item .lbl{font-size:9px;color:var(--muted);font-family:var(--mono);letter-spacing:.05em;margin-top:2px}
+
+
 .mic-wrap {
   position: relative;
 }
@@ -150,8 +175,10 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
         <div class="hdr-badge">PM</div>
         <div class="hdr-text"><h1>Policía Municipal Madrid</h1><p>PARTE DIARIO DE NOVEDADES</p></div>
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:6px">
         <button class="icon-btn" id="btn-tema" onclick="toggleTema()" title="Cambiar tema">☀️</button>
+        <button class="icon-btn" onclick="showMis()" title="Mis partes">👤</button>
+        <button class="icon-btn" onclick="showAdmin()" title="Administrador">🔑</button>
         <button class="icon-btn" onclick="nuevoF()">✚</button>
         <button class="icon-btn" onclick="showG()">☰</button>
       </div>
@@ -302,6 +329,65 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
 </div>
 
 </div>
+
+<!-- PANTALLA MIS PARTES -->
+<div class="screen" id="sc-mis">
+  <div class="hdr">
+    <div class="hdr-in">
+      <div class="hdr-brand">
+        <button class="icon-btn" onclick="showF()" style="margin-right:4px">←</button>
+        <div class="hdr-text"><h1>Mis partes</h1><p>BÚSQUEDA POR Nº CARNÉ</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll" style="padding-bottom:20px">
+    <div class="search-box">
+      <input id="mis-num" type="number" placeholder="Introduce tu nº de carné" inputmode="numeric">
+      <button class="search-btn" onclick="buscarMisPartes()">🔍 Buscar mis partes</button>
+    </div>
+    <div class="plist" id="mis-list"></div>
+  </div>
+</div>
+
+<!-- PANTALLA ADMINISTRADOR -->
+<div class="screen" id="sc-admin">
+  <div class="hdr">
+    <div class="hdr-in">
+      <div class="hdr-brand">
+        <button class="icon-btn" onclick="showF()" style="margin-right:4px">←</button>
+        <div class="hdr-text"><h1>Administrador</h1><p>TODOS LOS PARTES</p></div>
+      </div>
+      <button class="icon-btn" onclick="recargarAdmin()">↺</button>
+    </div>
+  </div>
+  <div id="admin-login-area">
+    <div class="admin-login">
+      <h2>🔐 Acceso restringido</h2>
+      <p>Introduce la contraseña de administrador</p>
+      <input id="admin-pass" type="password" placeholder="Contraseña" onkeydown="if(event.key==='Enter')loginAdmin()">
+      <button class="search-btn" onclick="loginAdmin()">Entrar</button>
+      <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:16px">
+        <p style="margin-bottom:8px;font-size:11px;color:var(--muted)">URL del sistema (configuración)</p>
+        <input id="script-url-input" type="text" placeholder="https://script.google.com/macros/s/..." 
+          style="font-size:11px;letter-spacing:0;padding:8px;margin-bottom:8px"
+          value="" onchange="guardarScriptUrl()">
+        <button onclick="guardarScriptUrl()" style="width:100%;padding:9px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--r);color:var(--muted);font-size:12px;cursor:pointer">
+          💾 Guardar URL
+        </button>
+      </div>
+    </div>
+  </div>
+  <div id="admin-content" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+    <div class="stat-bar" id="admin-stats"></div>
+    <div class="filter-bar">
+      <input id="admin-filter" type="text" placeholder="Filtrar por patrulla, agente, fecha..." oninput="filtrarAdmin()">
+    </div>
+    <div class="scroll" style="padding-bottom:20px">
+      <div class="plist" id="admin-list"></div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
@@ -315,6 +401,9 @@ let editId = null, incN = 0;
 window.addEventListener('load',()=>{
   setToday();
   addInc();
+  // Restaurar URL del script
+  const savedUrl = localStorage.getItem('pdn_script_url');
+  if(savedUrl){ SCRIPT_URL=savedUrl; const inp=document.getElementById('script-url-input'); if(inp)inp.value=savedUrl; }
   // Restaurar tema guardado
   if(localStorage.getItem('pdn_tema')==='dia'){
     document.body.classList.add('modo-dia');
@@ -1038,6 +1127,15 @@ async function exportarYSubir(){
     console.error(e);
     toast('PDF descargado · Sin conexión al repo');
   }
+  
+  // Guardar en Google Sheets
+  toast('Guardando en registro central...','gold');
+  const sheetOk = await guardarEnSheets(p);
+  if(sheetOk){
+    toast('✓ Parte registrado en el sistema','gold');
+  } else {
+    toast('PDF generado (sin conexión al registro)');
+  }
 }
 
 
@@ -1152,6 +1250,250 @@ function startVoice(fieldId, btn) {
 }
 
 // Service Worker
+
+// ── Configuración ────────────────────────────────────────────────────────────
+// URL del Apps Script (se configura después de desplegar)
+let SCRIPT_URL = localStorage.getItem('pdn_script_url') || 'https://script.google.com/macros/s/AKfycbxMTLOCiAZh6ZVMs-Ic4AujtoBjKl7qZaBIpIGC6OBXkvGVwlqSHW-G9FaubX4YRYWOiA/exec';
+const ADMIN_PASS = 'R9277.0.'; // Contraseña administrador
+
+// ── Guardar parte via Apps Script ─────────────────────────────────────────────
+async function guardarEnSheets(p) {
+  if(!SCRIPT_URL){ console.log('Sin URL de script'); return false; }
+  try {
+    const resp = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({action:'guardar', parte:p})
+    });
+    const data = await resp.json();
+    return data.ok === true;
+  } catch(e) {
+    console.error('Error guardando en Sheets:', e);
+    return false;
+  }
+}
+
+// ── Buscar partes por nº de agente ────────────────────────────────────────────
+async function buscarPartesPorAgente(numCarnet) {
+  if(!SCRIPT_URL){ toast('Configura la URL del sistema primero'); return null; }
+  try {
+    const resp = await fetch(`${SCRIPT_URL}?action=buscar&agente=${numCarnet}`);
+    const data = await resp.json();
+    return data.ok ? data.data : null;
+  } catch(e) {
+    console.error('Error buscando partes:', e);
+    return null;
+  }
+}
+
+// ── Obtener TODOS los partes (administrador) ──────────────────────────────────
+async function obtenerTodosPartes() {
+  if(!SCRIPT_URL){ toast('Configura la URL del sistema primero'); return null; }
+  try {
+    const resp = await fetch(`${SCRIPT_URL}?action=todos`);
+    const data = await resp.json();
+    return data.ok ? data.data : null;
+  } catch(e) {
+    console.error('Error obteniendo partes:', e);
+    return null;
+  }
+}
+
+
+
+// ── Navegación nuevas pantallas ───────────────────────────────────────────────
+function showMis(){
+  ['sc-form','sc-guard','sc-admin'].forEach(id=>{
+    document.getElementById(id).classList.remove('active');
+  });
+  document.getElementById('sc-mis').classList.add('active');
+}
+function showAdmin(){
+  ['sc-form','sc-guard','sc-mis'].forEach(id=>{
+    document.getElementById(id).classList.remove('active');
+  });
+  document.getElementById('sc-admin').classList.add('active');
+}
+
+// ── Login administrador ───────────────────────────────────────────────────────
+let adminLogueado = false;
+let todosPartes = [];
+
+function guardarScriptUrl(){
+  const url = document.getElementById('script-url-input').value.trim();
+  if(url){ SCRIPT_URL=url; localStorage.setItem('pdn_script_url',url); toast('URL guardada ✓','gold'); }
+  else toast('Introduce una URL válida');
+}
+
+function loginAdmin(){
+  const pass = document.getElementById('admin-pass').value;
+  if(pass === ADMIN_PASS){
+    adminLogueado = true;
+    document.getElementById('admin-login-area').style.display='none';
+    const content = document.getElementById('admin-content');
+    content.style.display='flex';
+    cargarTodosPartes();
+  } else {
+    toast('Contraseña incorrecta');
+    document.getElementById('admin-pass').value='';
+  }
+}
+
+async function cargarTodosPartes(){
+  const list = document.getElementById('admin-list');
+  list.innerHTML = '<div class="loading"><span class="spin">⏳</span><p style="margin-top:10px;font-size:12px;color:var(--muted)">Cargando partes...</p></div>';
+  
+  const partes = await obtenerTodosPartes();
+  if(partes === null){
+    list.innerHTML = '<div class="empty"><span class="ic">⚠️</span><p>Error al conectar con Google Sheets.<br>Comprueba la conexión.</p></div>';
+    return;
+  }
+  todosPartes = partes;
+  renderAdminStats(partes);
+  renderAdminList(partes);
+}
+
+function recargarAdmin(){
+  if(adminLogueado) cargarTodosPartes();
+}
+
+function renderAdminStats(partes){
+  const stats = document.getElementById('admin-stats');
+  const totalInc = partes.reduce((a,p)=>a+parseInt(p.numInc||0),0);
+  const agentesUnicos = new Set(partes.flatMap(p=>(p.agentes||'').split(',').map(a=>a.trim()).filter(Boolean))).size;
+  stats.innerHTML = `
+    <div class="stat-item"><div class="num">${partes.length}</div><div class="lbl">PARTES</div></div>
+    <div class="stat-item"><div class="num">${totalInc}</div><div class="lbl">INCIDENCIAS</div></div>
+    <div class="stat-item"><div class="num">${agentesUnicos}</div><div class="lbl">AGENTES</div></div>
+  `;
+}
+
+function filtrarAdmin(){
+  const q = document.getElementById('admin-filter').value.toLowerCase();
+  if(!q){ renderAdminList(todosPartes); return; }
+  const filtrados = todosPartes.filter(p=>
+    (p.patrulla||'').toLowerCase().includes(q) ||
+    (p.agentes||'').toLowerCase().includes(q) ||
+    (p.fecha||'').includes(q) ||
+    (p.firma||'').toLowerCase().includes(q) ||
+    (p.unidad||'').toLowerCase().includes(q)
+  );
+  renderAdminList(filtrados);
+}
+
+function renderAdminList(partes){
+  const list = document.getElementById('admin-list');
+  if(!partes.length){
+    list.innerHTML='<div class="empty"><span class="ic">📋</span><p>No hay partes que mostrar</p></div>';
+    return;
+  }
+  list.innerHTML = partes.map((p,i)=>{
+    const fd = p.fecha ? new Date(p.fecha+'T12:00').toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'}) : 'Sin fecha';
+    const fSave = p.fechaGuardado ? new Date(p.fechaGuardado).toLocaleString('es-ES') : '';
+    return `<div class="parte-card">
+      <div class="parte-card-top">
+        <h3>🚔 ${p.patrulla||'—'} · ${fd}</h3>
+        <span class="pbadge">${p.numInc} inc.</span>
+      </div>
+      <div class="meta">👤 Jefe: ${p.firma||p.jefe||'—'} · Agentes: ${p.agentes||'—'}</div>
+      <div class="meta">📅 Guardado: ${fSave}</div>
+      <div class="resumen">${p.resumen||'Sin incidencias registradas'}</div>
+      <div class="parte-card-acts">
+        <button class="abtn pdf" onclick="verPartePDF(${i})">↓ PDF</button>
+        <button class="abtn" onclick="verParteDetalle(${i})">👁 Ver</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Buscar mis partes ─────────────────────────────────────────────────────────
+async function buscarMisPartes(){
+  const num = document.getElementById('mis-num').value.trim();
+  if(!num){ toast('Introduce tu nº de carné'); return; }
+  
+  const list = document.getElementById('mis-list');
+  list.innerHTML = '<div class="loading"><span class="spin">⏳</span><p style="margin-top:10px;font-size:12px;color:var(--muted)">Buscando tus partes...</p></div>';
+  
+  const partes = await buscarPartesPorAgente(num);
+  if(partes === null){
+    list.innerHTML = '<div class="empty"><span class="ic">⚠️</span><p>Error al conectar.<br>Comprueba la conexión.</p></div>';
+    return;
+  }
+  if(!partes.length){
+    list.innerHTML = `<div class="empty"><span class="ic">🔍</span><p>No se encontraron partes<br>para el nº ${num}</p></div>`;
+    return;
+  }
+  
+  list.innerHTML = `<div style="padding:8px 16px;font-family:var(--mono);font-size:10px;color:var(--muted)">${partes.length} parte(s) encontrado(s)</div>` +
+  partes.map((p,i)=>{
+    const fd = p.fecha ? new Date(p.fecha+'T12:00').toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'}) : 'Sin fecha';
+    return `<div class="parte-card">
+      <div class="parte-card-top">
+        <h3>🚔 ${p.patrulla||'—'} · ${fd}</h3>
+        <span class="pbadge">${p.numInc} inc.</span>
+      </div>
+      <div class="meta">Jefe: ${p.firma||p.jefe||'—'} · ${p.turno||''}</div>
+      <div class="resumen">${p.resumen||'Sin incidencias registradas'}</div>
+      <div class="parte-card-acts">
+        <button class="abtn pdf" onclick="verMiPartePDF(${i},${JSON.stringify(partes).length<10000?i:'null'})">↓ PDF</button>
+      </div>
+    </div>`;
+  }).join('');
+  
+  // Guardar referencia para acceso
+  window._misPartes = partes;
+}
+
+// ── Ver parte en PDF ──────────────────────────────────────────────────────────
+function verPartePDF(idx){
+  try {
+    const p = JSON.parse(todosPartes[idx].datos||'{}');
+    if(p && Object.keys(p).length > 0) exportPDFData(p);
+    else toast('Datos del parte no disponibles');
+  } catch(e){ toast('Error al generar PDF'); }
+}
+
+function verMiPartePDF(idx){
+  try {
+    const p = JSON.parse((window._misPartes||[])[idx]?.datos||'{}');
+    if(p && Object.keys(p).length > 0) exportPDFData(p);
+    else toast('Datos del parte no disponibles');
+  } catch(e){ toast('Error al generar PDF'); }
+}
+
+function verParteDetalle(idx){
+  try {
+    const p = JSON.parse(todosPartes[idx].datos||'{}');
+    if(p && Object.keys(p).length > 0){
+      cargar_datos(p);
+      showF();
+      toast('Parte cargado en el formulario','gold');
+    } else toast('Datos no disponibles');
+  } catch(e){ toast('Error al cargar parte'); }
+}
+
+function cargar_datos(p){
+  editId=null;
+  const s=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
+  s('f-uni',p.unidad);s('f-pat',p.patrulla);s('f-veh',p.vehiculo);
+  s('f-fecha',p.fecha);s('f-turno',p.turno||'');s('f-serv',p.servicio);
+  s('f-jefe',p.jefe);s('f-ag2',p.ag2);s('f-ag3',p.ag3);s('f-ag4',p.ag4);
+  s('f-transmision',p.transmision);s('f-impresora',p.impresora);s('f-taser',p.taser);
+  s('f-obs',p.obs);s('f-obs-veh',p.obsVeh);s('f-firma',p.firma);
+  s('f-jturno',p.jefeTurno);s('f-hi',p.horaInicio);s('f-hf',p.horaFin);
+  ['a1e1','a1e2','a1e3','a2e1','a2e2','a2e3',
+   'e_vg','e_rv','e_ic','e_det','e_ap','e_va','e_ca','e_pos','e_neg',
+   'e_ie','e_bomb','e_le','e_idv','e_idp','e_at','e_sim','e_dro','e_arm'
+  ].forEach(k=>s(k,p[k]||0));
+  document.getElementById('inc-cont').innerHTML=''; incN=0;
+  (p.incidencias||[]).forEach(inc=>addInc(inc));
+  const matN=['Linterna','3 Conos','Capuchón','Guía Callejero','Extintor',
+    'Señaliz. Alcohol','Triángulos','Carpeta','l Señal luminosa Azul (Veh. Camuflados)'];
+  const mat=p.material||[];
+  for(let i=1;i<=9;i++){const e=document.getElementById('m'+i);if(e)e.checked=mat.includes(matN[i-1]);}
+  tab('id');
+}
+
+
 // Desregistrar Service Workers para evitar caché
 if('serviceWorker' in navigator){
   navigator.serviceWorker.getRegistrations().then(regs=>{
