@@ -103,6 +103,17 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
 .toast.gold{border-color:var(--gold);color:var(--gold)}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(200,168,75,.2);border-radius:2px}
 
+.inf-toggle{width:100%;padding:11px 14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--rl);color:var(--white);font-size:13px;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;text-align:left}
+.inf-toggle.active{background:rgba(200,168,75,.08);border-color:rgba(200,168,75,.3);color:var(--gold)}
+.inf-toggle .arr{transition:transform .2s;font-size:10px}
+.inf-toggle.active .arr{transform:rotate(180deg)}
+.inf-body{display:none;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:var(--rl);padding:12px;margin-bottom:12px;margin-top:-4px}
+.inf-body.open{display:block}
+.cbgroup{display:flex;gap:12px;flex-wrap:wrap;margin:6px 0}
+.cbitem{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
+.cbitem input[type=checkbox]{width:15px;height:15px;accent-color:var(--gold)}
+
+
 .search-box{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin:12px 16px}
 .search-box input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:var(--r);padding:11px 14px;font-size:16px;color:var(--white);font-family:var(--mono);text-align:center;letter-spacing:.1em}
 .search-box input:focus{outline:none;border-color:var(--gold)}
@@ -188,7 +199,9 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
     <button class="tab active" id="t-id"  onclick="tab('id')">PATRULLA</button>
     <button class="tab"        id="t-inc" onclick="tab('inc')">INCIDENCIAS</button>
     <button class="tab"        id="t-est" onclick="tab('est')">ESTADILLO</button>
-    <button class="tab"        id="t-cie" onclick="tab('cie')">CIERRE</button>
+    <button class="tab"        id="t-inf" onclick="tab('inf')">INFORMES</button>
+    <button class="tab" id="t-inf" onclick="tab('inf')">INFORMES</button>
+    <button class="tab" id="t-cie" onclick="tab('cie')">CIERRE</button>
   </div>
   <div class="scroll" id="fbody">
 
@@ -282,6 +295,63 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
           <label>Observaciones vehículo</label>
           <textarea id="f-obs-veh" placeholder="Estado, incidencias materiales..." style="min-height:55px"></textarea>
         </div>
+      </div>
+    </div>
+
+    <!-- TAB INFORMES -->
+    <div id="tab-inf" style="display:none">
+      <div class="sec"><div class="sec-lbl">Informes adicionales</div>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Rellena solo los que apliquen. Se descargan junto al parte al exportar.</p>
+
+        <button class="inf-toggle" id="btn-auxilio" onclick="toggleInf('auxilio')"><span>&#x1F691; Informe de Auxilio a Persona</span><span class="arr">&#9660;</span></button>
+        <div class="inf-body" id="body-auxilio">
+          <div class="field"><label>Requeridos por</label><input id="aux-req" type="text" placeholder="Ciudadano, V-0..."></div>
+          <div class="r2"><div class="field"><label>Fecha</label><input id="aux-fecha" type="date"></div><div class="field"><label>Hora</label><input id="aux-hora" type="time"></div></div>
+          <div class="field"><label>Calle / Lugar</label><input id="aux-calle" type="text"></div>
+          <div class="field"><label>Estado</label><div class="cbgroup"><div class="cbitem"><input type="checkbox" id="aux-herida"><label for="aux-herida">Herida</label></div><div class="cbitem"><input type="checkbox" id="aux-enferma"><label for="aux-enferma">Enferma</label></div></div></div>
+          <div class="field"><label>Nombre y apellidos</label><input id="aux-nombre" type="text"></div>
+          <div class="r2"><div class="field"><label>Edad</label><input id="aux-edad" type="text"></div><div class="field"><label>DNI/NIE/Pasaporte</label><input id="aux-dni" type="text"></div></div>
+          <div class="r2"><div class="field"><label>Domicilio</label><input id="aux-dom" type="text"></div><div class="field"><label>Teléfono</label><input id="aux-tel" type="text"></div></div>
+          <div class="r2"><div class="field"><label>Asistido por</label><input id="aux-asist" type="text"></div><div class="field"><label>Trasladado a</label><input id="aux-trasl" type="text"></div></div>
+          <div class="field"><label>Motivo de la intervención</label><textarea id="aux-motivo" style="min-height:80px" placeholder="Descripción..."></textarea></div>
+          <div class="field"><label>Nombre jefe/a equipo</label><input id="aux-jefe" type="text"></div>
+        </div>
+
+        <button class="inf-toggle" id="btn-bomberos" onclick="toggleInf('bomberos')"><span>&#x1F692; Informe de Actuación de Bomberos</span><span class="arr">&#9660;</span></button>
+        <div class="inf-body" id="body-bomberos">
+          <div class="field"><label>Requeridos por</label><input id="bom-req" type="text"></div>
+          <div class="r2"><div class="field"><label>Fecha</label><input id="bom-fecha" type="date"></div><div class="field"><label>Hora</label><input id="bom-hora" type="time"></div></div>
+          <div class="field"><label>Calle / Lugar</label><input id="bom-calle" type="text"></div>
+          <div class="field"><label>Tipo</label><div class="cbgroup"><div class="cbitem"><input type="checkbox" id="bom-viv"><label for="bom-viv">Vivienda</label></div><div class="cbitem"><input type="checkbox" id="bom-pas"><label for="bom-pas">Pastos</label></div></div></div>
+          <div class="field"><label>Parque de bomberos</label><input id="bom-parque" type="text"></div>
+          <div class="r2"><div class="field"><label>Nº dotaciones</label><input id="bom-dotac" type="number" min="1"></div><div class="field"><label>Horario de</label><input id="bom-h1" type="time"></div></div>
+          <div class="field"><label>Horario a</label><input id="bom-h2" type="time"></div>
+          <div class="field"><label>Titular del bien siniestrado</label><input id="bom-titular" type="text"></div>
+          <div class="r2"><div class="field"><label>Domicilio</label><input id="bom-dom" type="text"></div><div class="field"><label>DNI/NIE</label><input id="bom-dni" type="text"></div></div>
+          <div class="field"><label>Teléfono</label><input id="bom-tel" type="text"></div>
+          <div class="field"><label>Motivo e intervención</label><textarea id="bom-motivo" style="min-height:80px"></textarea></div>
+          <div class="field"><label>Nombre jefe/a equipo</label><input id="bom-jefe" type="text"></div>
+        </div>
+
+        <button class="inf-toggle" id="btn-accidente" onclick="toggleInf('accidente')"><span>&#x26A0;&#xFE0F; Parte de Accidente Laboral</span><span class="arr">&#9660;</span></button>
+        <div class="inf-body" id="body-accidente">
+          <div class="r2"><div class="field"><label>Nº registro</label><input id="acc-nreg" type="text"></div><div class="field"><label>Nº atestado</label><input id="acc-natest" type="text"></div></div>
+          <div class="r2"><div class="field"><label>Fecha</label><input id="acc-fecha" type="date"></div><div class="field"><label>Hora</label><input id="acc-hora" type="time"></div></div>
+          <div class="field"><label>Lugar exacto del accidente</label><input id="acc-lugar" type="text"></div>
+          <div class="field"><label>Descripción del accidente</label><textarea id="acc-desc" style="min-height:70px"></textarea></div>
+          <div class="sec-lbl" style="margin-top:8px">Persona accidentada</div>
+          <div class="field"><label>Nombre y apellidos</label><input id="acc-nom1" type="text"></div>
+          <div class="r2"><div class="field"><label>DNI/NIE</label><input id="acc-dni1" type="text"></div><div class="field"><label>Teléfono</label><input id="acc-tel1" type="text"></div></div>
+          <div class="field"><label>Domicilio</label><input id="acc-dom1" type="text"></div>
+          <div class="field"><label>Lesividad</label><select id="acc-les1"><option value="">—</option><option>PR</option><option>HL</option><option>H-G</option><option>HG</option><option>M</option></select></div>
+          <div class="r2"><div class="field"><label>Asistido/a por</label><input id="acc-asist1" type="text"></div><div class="field"><label>Trasladado/a a</label><input id="acc-trasl1" type="text"></div></div>
+          <div class="field"><label>Tarea que realizaba</label><input id="acc-tarea1" type="text"></div>
+          <div class="sec-lbl" style="margin-top:8px">Empresa</div>
+          <div class="r2"><div class="field"><label>Razón social</label><input id="acc-emp" type="text"></div><div class="field"><label>NIF</label><input id="acc-nif" type="text"></div></div>
+          <div class="field"><label>Observaciones</label><textarea id="acc-obs" style="min-height:60px"></textarea></div>
+          <div class="r2"><div class="field"><label>Firmante 1 (nº policial)</label><input id="acc-firma1" type="text"></div><div class="field"><label>Firmante 2 (nº policial)</label><input id="acc-firma2" type="text"></div></div>
+        </div>
+
       </div>
     </div>
 
@@ -820,7 +890,7 @@ window.addEventListener('load',()=>{
 });
 
 // ── UI helpers ────────────────────────────────────────────────────────────────
-const TABS=['id','inc','est','cie'];
+const TABS=['id','inc','est','inf','cie'];
 function tab(t){
   TABS.forEach(x=>{
     document.getElementById('tab-'+x).style.display=x===t?'':'none';
@@ -1493,6 +1563,9 @@ async function exportarYSubir(){
   const pdfB64=generarPDFbase64(p);
   if(!pdfB64){toast('Error generando el PDF');return;}
 
+  // Generar informes adicionales (auxilio, bomberos, accidente) si están rellenos
+  await generarTodosInformes(p);
+
   // Descargar localmente
   const pat=(p.patrulla||'parte').replace(/[^a-zA-Z0-9]/g,'-');
   const fecha=p.fecha||new Date().toISOString().slice(0,10);
@@ -1925,6 +1998,206 @@ function cargar_datos(p){
   tab('id');
 }
 
+
+
+// ── Informes adicionales ──────────────────────────────────────────────────────
+const FORMS_BASE = 'https://copolincidencias-netizen.github.io/pdn-madrid';
+
+function toggleInf(id) {
+  const btn = document.getElementById('btn-'+id);
+  const body = document.getElementById('body-'+id);
+  btn.classList.toggle('active');
+  body.classList.toggle('open');
+  const arr = btn.querySelector('.arr');
+  if(arr) arr.textContent = body.classList.contains('open') ? '▲' : '▼';
+}
+
+function g(id){ return (document.getElementById(id)||{}).value||''; }
+
+function getInformesData(){
+  const auxOpen = document.getElementById('body-auxilio')?.classList.contains('open');
+  const bomOpen = document.getElementById('body-bomberos')?.classList.contains('open');
+  const accOpen = document.getElementById('body-accidente')?.classList.contains('open');
+  return {
+    auxilio: auxOpen ? {
+      req: g('aux-req'), fecha: g('aux-fecha'), hora: g('aux-hora'),
+      calle: g('aux-calle'), herida: document.getElementById('aux-herida')?.checked,
+      enferma: document.getElementById('aux-enferma')?.checked,
+      nombre: g('aux-nombre'), edad: g('aux-edad'), dni: g('aux-dni'),
+      dom: g('aux-dom'), tel: g('aux-tel'), asist: g('aux-asist'),
+      trasl: g('aux-trasl'), motivo: g('aux-motivo'), jefe: g('aux-jefe'),
+    } : null,
+    bomberos: bomOpen ? {
+      req: g('bom-req'), fecha: g('bom-fecha'), hora: g('bom-hora'),
+      calle: g('bom-calle'), vivienda: document.getElementById('bom-viv')?.checked,
+      pastos: document.getElementById('bom-pas')?.checked,
+      parque: g('bom-parque'), dotac: g('bom-dotac'),
+      h1: g('bom-h1'), h2: g('bom-h2'),
+      titular: g('bom-titular'), dom: g('bom-dom'), dni: g('bom-dni'),
+      tel: g('bom-tel'), motivo: g('bom-motivo'), jefe: g('bom-jefe'),
+    } : null,
+    accidente: accOpen ? {
+      nreg: g('acc-nreg'), natest: g('acc-natest'),
+      fecha: g('acc-fecha'), hora: g('acc-hora'), lugar: g('acc-lugar'),
+      desc: g('acc-desc'), nom1: g('acc-nom1'), dni1: g('acc-dni1'),
+      tel1: g('acc-tel1'), dom1: g('acc-dom1'), les1: g('acc-les1'),
+      asist1: g('acc-asist1'), trasl1: g('acc-trasl1'), tarea1: g('acc-tarea1'),
+      emp: g('acc-emp'), nif: g('acc-nif'), obs: g('acc-obs'),
+      firma1: g('acc-firma1'), firma2: g('acc-firma2'),
+    } : null,
+  };
+}
+
+// Rellenar campos del formulario PDF con pdf-lib
+async function generarInformePDF(tipo, datos, indicativo, numsPoliciales) {
+  const url = `${FORMS_BASE}/${tipo}.pdf`;
+  try {
+    const resp = await fetch(url);
+    if(!resp.ok) throw new Error('No se pudo cargar el formulario: ' + url);
+    const pdfBytes = await resp.arrayBuffer();
+    
+    // Usar pdf-lib para rellenar los campos
+    const { PDFDocument } = PDFLib;
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    const form = pdfDoc.getForm();
+    
+    const setTxt = (name, val) => {
+      try { if(val) form.getTextField(name).setText(String(val)); } catch(e){}
+    };
+    const setChk = (name, checked) => {
+      try {
+        const field = form.getCheckBox(name);
+        if(checked) field.check(); else field.uncheck();
+      } catch(e){}
+    };
+    
+    // Campos comunes a auxilio y bomberos
+    setTxt('Indicativo', indicativo||'');
+    setTxt('Nos policiales', numsPoliciales||'');
+    setTxt('Unidad', 'C.I.D. ARGANZUELA');
+    
+    if(tipo === 'auxilio') {
+      const d = datos;
+      const fechaParts = d.fecha ? d.fecha.split('-') : ['','',''];
+      setTxt('Requeridos por', d.req);
+      setTxt('Fecha', d.fecha ? fechaParts[2]+'/'+fechaParts[1]+'/'+fechaParts[0] : '');
+      setTxt('Hora', d.hora);
+      setTxt('Calle', d.calle);
+      setChk('Herida', d.herida);
+      setChk('Enferma', d.enferma);
+      setTxt('Nombre y apellidos', d.nombre);
+      setTxt('Edad', d.edad);
+      setTxt('DNINIEPasaporte', d.dni);
+      setTxt('Domicilio', d.dom);
+      setTxt('Teléfono', d.tel);
+      setTxt('Asistido por', d.asist);
+      setTxt('Trasladado a', d.trasl);
+      setTxt('MOTIVO DE LA INTERVENCIÓNRow1', d.motivo);
+      setTxt('Madrid', fechaParts[2]||'');
+      setTxt('de', fechaParts[1] ? meses[parseInt(fechaParts[1])-1]||'' : '');
+      setTxt('de 20', fechaParts[0] ? fechaParts[0].slice(2) : '');
+      setTxt('EL', d.jefe||'');
+      setTxt('Comisaría', 'C.I.D. ARGANZUELA');
+    }
+    
+    if(tipo === 'bomberos') {
+      const d = datos;
+      const fechaParts = d.fecha ? d.fecha.split('-') : ['','',''];
+      setTxt('Requeridos por', d.req);
+      setTxt('Fecha', d.fecha ? fechaParts[2]+'/'+fechaParts[1]+'/'+fechaParts[0] : '');
+      setTxt('Hora', d.hora);
+      setTxt('Calle', d.calle);
+      setChk('Vivienda', d.vivienda);
+      setChk('Pastos', d.pastos);
+      setTxt('Parque de bomberos', d.parque);
+      setTxt('N de dotaciones', d.dotac);
+      setTxt('Hora1', d.h1);
+      setTxt('Hora2', d.h2);
+      setTxt('Nombre y apellidos', d.titular);
+      setTxt('Domicilio', d.dom);
+      setTxt('DNINIEPasaporte', d.dni);
+      setTxt('Teléfono', d.tel);
+      setTxt('MOTIVO DE LA INTERVENCIÓN Y MEDIDAS ADOPTADASRow1', d.motivo);
+      setTxt('Madrid', fechaParts[2]||'');
+      setTxt('de', fechaParts[1] ? meses[parseInt(fechaParts[1])-1]||'' : '');
+      setTxt('de 20', fechaParts[0] ? fechaParts[0].slice(2) : '');
+      setTxt('EL', d.jefe||'');
+      setTxt('Comisaría', 'C.I.D. ARGANZUELA');
+    }
+    
+    if(tipo === 'accidente') {
+      const d = datos;
+      const fechaParts = d.fecha ? d.fecha.split('-') : ['','',''];
+      setTxt('N Registro', d.nreg);
+      setTxt('N atestado', d.natest);
+      setTxt('Unidad', indicativo||'');
+      setTxt('Indicativo', indicativo||'');
+      setTxt('Componentes', numsPoliciales||'');
+      setTxt('Fecha', d.fecha ? fechaParts[2]+'/'+fechaParts[1]+'/'+fechaParts[0] : '');
+      setTxt('Hora', d.hora);
+      setTxt('Lugar', d.lugar);
+      setTxt('Descripción y tipo de accidente', d.desc);
+      setTxt('Nombre y apellidos', d.nom1);
+      setTxt('DNI/NIE', d.dni1);
+      setTxt('Teléfono', d.tel1);
+      setTxt('Domicilio', d.dom1);
+      setTxt('Asistido/a por', d.asist1);
+      setTxt('Trasladado/a a', d.trasl1);
+      setTxt('Tarea que realizaba en el accidente', d.tarea1);
+      // Lesividad
+      ['PR','HL','H-G','HG','M'].forEach(l => setChk(l, d.les1===l));
+      setTxt('Nombre o razón social', d.emp);
+      setTxt('NIF', d.nif);
+      setTxt('Observaciones', d.obs);
+      setTxt('Núm. policial', d.firma1);
+      setTxt('Núm. policial1', d.firma2);
+      setTxt('Fecha4', d.fecha ? fechaParts[2]+'/'+fechaParts[1]+'/'+fechaParts[0] : '');
+    }
+    
+    // Aplanar el formulario para que no sea editable
+    form.flatten();
+    
+    const filledBytes = await pdfDoc.save();
+    return filledBytes;
+  } catch(e) {
+    console.error('Error generando informe', tipo, e);
+    return null;
+  }
+}
+
+const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+               'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function descargarBlob(bytes, filename) {
+  const blob = new Blob([bytes], {type:'application/pdf'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+
+async function generarTodosInformes(parte) {
+  const inf = getInformesData();
+  const indicativo = parte.patrulla || '';
+  const nums = [parte.jefe,parte.ag2,parte.ag3,parte.ag4].filter(Boolean).join(', ');
+  const fecha = parte.fecha || '';
+  
+  if(inf.auxilio) {
+    toast('Generando informe de auxilio...','gold');
+    const bytes = await generarInformePDF('auxilio', inf.auxilio, indicativo, nums);
+    if(bytes) descargarBlob(bytes, `Auxilio_${indicativo}_${fecha}.pdf`);
+  }
+  if(inf.bomberos) {
+    toast('Generando informe de bomberos...','gold');
+    const bytes = await generarInformePDF('bomberos', inf.bomberos, indicativo, nums);
+    if(bytes) descargarBlob(bytes, `Bomberos_${indicativo}_${fecha}.pdf`);
+  }
+  if(inf.accidente) {
+    toast('Generando parte de accidente...','gold');
+    const bytes = await generarInformePDF('accidente', inf.accidente, indicativo, nums);
+    if(bytes) descargarBlob(bytes, `Accidente_${indicativo}_${fecha}.pdf`);
+  }
+}
 
 // Desregistrar Service Workers para evitar caché
 if('serviceWorker' in navigator){
