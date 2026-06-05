@@ -1589,15 +1589,20 @@ function _buildPDF(doc,p){
   // Borde exterior tabla
   drawTablaBorde(TABLA_TOP, yCur);
 
-  // ── Sección Expedientes OAC (si los hay) ─────────────────────────────────
+  // ── Sección Expedientes OAC dentro de la tabla ──────────────────────────────
   const oacs = (p.oacs||[]).filter(o=>o.nexp||o.oac);
-  if(oacs.length > 0 && yCur + oacs.length*8 < FOOTER_Y - 5){
-    let oy = yCur + 3;
-    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); setTxt(...C_NAVY);
-    txt('EXPEDIENTES OAC', LM, oy+3.5, {bold:true, sz:7.5, color:C_NAVY});
-    oy += 6;
+  if(oacs.length > 0){
+    // Cabecera OAC dentro de la tabla
+    const oacHeaderH = 7;
+    fillRect(LM, yCur, PW, oacHeaderH, 220,220,220);
+    setDraw(...C_BLACK); setLW(0.3); doc.rect(LM, yCur, PW, oacHeaderH, 'S');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); setTxt(...C_NAVY);
+    doc.text('EXPEDIENTES OAC', LM+PW/2, yCur+4.8, {align:'center'});
+    yCur += oacHeaderH;
+
+    // Filas OAC
     oacs.forEach(o=>{
-      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); setTxt(...C_BLACK);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); setTxt(...C_BLACK);
       const linea = [
         o.nexp ? 'Exp. ' + o.nexp : '',
         o.hora ? o.hora+'h' : '',
@@ -1605,7 +1610,12 @@ function _buildPDF(doc,p){
         o.result ? '['+o.result+']' : ''
       ].filter(Boolean).join('  ·  ');
       const lines = doc.splitTextToSize(linea, PW-4);
-      lines.forEach(l=>{ doc.text(l, LM, oy); oy+=4; });
+      const rowH = Math.max(8, lines.length * 5 + 3);
+      setDraw(...C_BLACK); setLW(0.3);
+      doc.rect(LM, yCur, PW, rowH, 'S');
+      let ly = yCur + 4;
+      lines.forEach(l=>{ doc.text(l, LM+2, ly); ly+=5; });
+      yCur += rowH;
     });
   }
 
@@ -1657,6 +1667,20 @@ function _buildPDF(doc,p){
     // Los dibujamos en el pie de la pág 1 (bajo la tabla si hay espacio)
     // o los añadimos como nota en pág 2 tras el estadillo
     // Por ahora los añadimos en el header de pág 1 como info extra
+  }
+
+  // ── Observaciones generales ──────────────────────────────────────────────
+  const obsGen = p.obs || '';
+  if(obsGen){
+    // Calcular posición Y disponible después del estadillo
+    // Añadir en la parte inferior de pág 2
+    const obsY = 262;
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); setTxt(...C_NAVY);
+    doc.text('OBSERVACIONES:', LM, obsY);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); setTxt(...C_BLACK);
+    const obsLines = doc.splitTextToSize(obsGen, PW-2);
+    let oy2 = obsY + 5;
+    obsLines.slice(0,4).forEach(l=>{ doc.text(l, LM, oy2); oy2+=4.5; });
   }
 
   // Guardar PDF
