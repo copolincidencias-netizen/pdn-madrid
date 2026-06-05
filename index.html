@@ -1275,18 +1275,8 @@ function _buildPDF(doc,p){
     // Logo Coord. General: 378×102px → 43mm ancho proporcional
     doc.addImage(B64_COORD,'PNG', RM-42, 2, 42, 42*194/503,'','FAST');
     hline(LM, 31, RM, 0.4, [115,115,115]);
-    // Footer (Y: 263→296mm)
-    doc.setFont('helvetica','normal'); doc.setFontSize(5.8); setTxt(...C_NAVY);
-    const fl=['CUERPO DE POLICÍA MUNICIPAL','Inspección de Planificación y Coordinación',
-              'Subinspección Técnica de Análisis','Área de Procedimientos y Normas',
-              'C/ Albarracín 31 –1ª planta  28037 – Madrid',
-              'Telf.: 91 513 31 61 / Fax: 91 480 44 84','exprocnormas@pm.madrid'];
-    fl.forEach((l,i)=>doc.text(l,PH/2,263+i*2.9,{align:'center'}));
-    // Nº página (arriba derecha)
-    setTxt(...C_BLACK); doc.setFontSize(8);
-    doc.text(`Página ${pageN} de ${total}`, RM, 5, {align:'right'});
+    
   }
-
   // ── FORMULARIO CABECERA (Y: 33→87mm) ─────────────────────────────────────
   function drawFormCabecera(){
     // Borde exterior de la caja del formulario
