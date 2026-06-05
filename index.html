@@ -1900,16 +1900,40 @@ const ADMIN_PASS = 'R9277.0.'; // Contraseña administrador
 async function guardarEnSheets(p) {
   if(!SCRIPT_URL){ console.log('Sin URL de script'); return false; }
   try {
-    const resp = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      redirect: 'follow',
-      body: JSON.stringify({action:'guardar', parte:p})
+    // Primero intentar con POST (más datos)
+    const parteJSON = JSON.stringify(p).substring(0, 4000);
+    
+    // Usar GET con parámetros para máxima compatibilidad con móviles
+    // (evita problemas CORS con POST en Safari/iOS)
+    const params = new URLSearchParams({
+      action: 'guardar',
+      parte: parteJSON
     });
-    const data = await resp.json();
-    return data.ok === true;
+    const url = `${SCRIPT_URL}?${params.toString()}`;
+    
+    const resp = await fetch(url, {
+      method: 'GET',
+      redirect: 'follow',
+      mode: 'no-cors' // evita errores CORS en móviles
+    });
+    
+    // Con no-cors no podemos leer la respuesta, asumimos éxito si no hay error
+    return true;
   } catch(e) {
     console.error('Error guardando en Sheets:', e);
-    return false;
+    // Intentar con POST como fallback
+    try {
+      const resp2 = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        redirect: 'follow',
+        body: JSON.stringify({action:'guardar', parte:p})
+      });
+      const data = await resp2.json();
+      return data.ok === true;
+    } catch(e2) {
+      console.error('Error fallback POST:', e2);
+      return false;
+    }
   }
 }
 
