@@ -2574,15 +2574,9 @@ function hrBuildPDFDoc(){
 
   // Página 1
   dc(0,0,0);doc.setLineWidth(0.5);doc.rect(0.5,0.5,W-1,H-1);
-  doc.setLineWidth(0.6);dc(...NAVY);
-  doc.circle(LM+5,11,6,'S');
-  sB(4.5);tc(...NAVY);
-  doc.text('POL.MUN.',LM+5,9.5,{align:'center'});
-  doc.text('MADRID',LM+5,12,{align:'center'});
-  sN(4.5);tc(60,60,60);
-  doc.text('vicealcaldia, portavoz,',RM,8.5,{align:'right'});
-  doc.text('seguridad y emergencias',RM,11,{align:'right'});
-  sB(10);tc(...NAVY);doc.text('MADRID',RM,16,{align:'right'});
+  // Nuevos logos
+  doc.addImage(B64_IM0,'PNG', LM, 1, 32, 32*194/757,'','FAST');
+  doc.addImage(B64_COORD,'PNG', RM-28, 1, 28, 28*194/503,'','FAST');
   sB(13);tc(0,0,0);doc.text('HOJA DE RUTA',W/2,28,{align:'center'});
 
   let y=38;
