@@ -411,7 +411,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
           <div class="r2"><div class="field"><label>Edad</label><input id="aux-edad" type="text"></div><div class="field"><label>DNI/NIE/Pasaporte</label><input id="aux-dni" type="text"></div></div>
           <div class="r2"><div class="field"><label>Domicilio</label><input id="aux-dom" type="text"></div><div class="field"><label>Teléfono</label><input id="aux-tel" type="text"></div></div>
           <div class="r2"><div class="field"><label>Asistido por</label><input id="aux-asist" type="text"></div><div class="field"><label>Trasladado a</label><input id="aux-trasl" type="text"></div></div>
-          <div class="field"><label>Motivo de la intervención</label><textarea id="aux-motivo" style="min-height:80px" placeholder="Descripción..."></textarea></div>
+          <div class="field"><label>Motivo de la intervención</label><div class="mic-wrap-inner" style="align-items:flex-start"><textarea id="aux-motivo" style="min-height:80px" placeholder="Descripción..."></textarea><button type="button" class="mic-btn" onclick="startVoice('aux-motivo',this)" title="Voz">🎤</button></div></div>
           <div class="field"><label>Nombre jefe/a equipo</label><input id="aux-jefe" type="text"></div>
         </div>
 
@@ -427,7 +427,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
           <div class="field"><label>Titular del bien siniestrado</label><input id="bom-titular" type="text"></div>
           <div class="r2"><div class="field"><label>Domicilio</label><input id="bom-dom" type="text"></div><div class="field"><label>DNI/NIE</label><input id="bom-dni" type="text"></div></div>
           <div class="field"><label>Teléfono</label><input id="bom-tel" type="text"></div>
-          <div class="field"><label>Motivo e intervención</label><textarea id="bom-motivo" style="min-height:80px"></textarea></div>
+          <div class="field"><label>Motivo e intervención</label><div class="mic-wrap-inner" style="align-items:flex-start"><textarea id="bom-motivo" style="min-height:80px"></textarea><button type="button" class="mic-btn" onclick="startVoice('bom-motivo',this)" title="Voz">🎤</button></div></div>
           <div class="field"><label>Nombre jefe/a equipo</label><input id="bom-jefe" type="text"></div>
         </div>
 
@@ -436,7 +436,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
           <div class="r2"><div class="field"><label>Nº registro</label><input id="acc-nreg" type="text"></div><div class="field"><label>Nº atestado</label><input id="acc-natest" type="text"></div></div>
           <div class="r2"><div class="field"><label>Fecha</label><input id="acc-fecha" type="date"></div><div class="field"><label>Hora</label><input id="acc-hora" type="time"></div></div>
           <div class="field"><label>Lugar exacto del accidente</label><input id="acc-lugar" type="text"></div>
-          <div class="field"><label>Descripción del accidente</label><textarea id="acc-desc" style="min-height:70px"></textarea></div>
+          <div class="field"><label>Descripción del accidente</label><div class="mic-wrap-inner" style="align-items:flex-start"><textarea id="acc-desc" style="min-height:70px"></textarea><button type="button" class="mic-btn" onclick="startVoice('acc-desc',this)" title="Voz">🎤</button></div></div>
           <div class="sec-lbl" style="margin-top:8px">Persona accidentada</div>
           <div class="field"><label>Nombre y apellidos</label><input id="acc-nom1" type="text"></div>
           <div class="r2"><div class="field"><label>DNI/NIE</label><input id="acc-dni1" type="text"></div><div class="field"><label>Teléfono</label><input id="acc-tel1" type="text"></div></div>
@@ -446,7 +446,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
           <div class="field"><label>Tarea que realizaba</label><input id="acc-tarea1" type="text"></div>
           <div class="sec-lbl" style="margin-top:8px">Empresa</div>
           <div class="r2"><div class="field"><label>Razón social</label><input id="acc-emp" type="text"></div><div class="field"><label>NIF</label><input id="acc-nif" type="text"></div></div>
-          <div class="field"><label>Observaciones</label><textarea id="acc-obs" style="min-height:60px"></textarea></div>
+          <div class="field"><label>Observaciones</label><div class="mic-wrap-inner" style="align-items:flex-start"><textarea id="acc-obs" style="min-height:60px"></textarea><button type="button" class="mic-btn" onclick="startVoice('acc-obs',this)" title="Voz">🎤</button></div></div>
           <div class="r2"><div class="field"><label>Firmante 1 (nº policial)</label><input id="acc-firma1" type="text"></div><div class="field"><label>Firmante 2 (nº policial)</label><input id="acc-firma2" type="text"></div></div>
         </div>
 
@@ -1878,6 +1878,9 @@ function startVoice(fieldId, btn) {
         interino += e.results[i][0].transcript;
       }
     }
+    // Convertir números en letras a dígitos
+    final = numLetrasADigitos(final);
+    interino = numLetrasADigitos(interino);
     el.value = textoBase + (textoBase && final ? ' ' : '') + final + interino;
   };
 
@@ -2795,6 +2798,104 @@ function getOacData(){
 function limpiarOac(){
   document.getElementById('oac-cont').innerHTML='';
   oacN=0;
+}
+
+
+// ── Conversión de números en letras a dígitos ─────────────────────────────────
+function numLetrasADigitos(texto) {
+  if(!texto) return texto;
+
+  // Mapa de unidades
+  const UNIDADES = {
+    'cero':0,'un':1,'uno':1,'una':1,'dos':2,'tres':3,'cuatro':4,'cinco':5,
+    'seis':6,'siete':7,'ocho':8,'nueve':9,'diez':10,'once':11,'doce':12,
+    'trece':13,'catorce':14,'quince':15,
+    'dieciseis':16,'dieciséis':16,'diecisiete':17,'dieciocho':18,'diecinueve':19,
+    'veinte':20,'veintiun':21,'veintiuno':21,'veintidós':22,'veintidos':22,
+    'veintitres':23,'veintitrés':23,'veinticuatro':24,'veinticinco':25,
+    'veintiseis':26,'veintiséis':26,'veintisiete':27,'veintiocho':28,'veintinueve':29
+  };
+  const DECENAS = {
+    'treinta':30,'cuarenta':40,'cincuenta':50,'sesenta':60,
+    'setenta':70,'ochenta':80,'noventa':90
+  };
+  const CENTENAS = {
+    'cien':100,'ciento':100,'doscientos':200,'doscientas':200,
+    'trescientos':300,'trescientas':300,'cuatrocientos':400,'cuatrocientas':400,
+    'quinientos':500,'quinientas':500,'seiscientos':600,'seiscientas':600,
+    'setecientos':700,'setecientas':700,'ochocientos':800,'ochocientas':800,
+    'novecientos':900,'novecientas':900
+  };
+
+  // Normalizar texto: quitar tildes para comparación
+  function norm(s){ return s.toLowerCase()
+    .replace(/á/g,'a').replace(/é/g,'e').replace(/í/g,'i')
+    .replace(/ó/g,'o').replace(/ú/g,'u').replace(/ü/g,'u'); }
+
+  // Convertir una secuencia de palabras numéricas a número
+  function palabrasANum(palabras) {
+    let total = 0, current = 0;
+    for(let p of palabras) {
+      const n = norm(p);
+      if(n === 'mil') {
+        current = current || 1;
+        total += current * 1000;
+        current = 0;
+      } else if(CENTENAS[n] !== undefined) {
+        current += CENTENAS[n];
+      } else if(DECENAS[n] !== undefined) {
+        current += DECENAS[n];
+      } else if(UNIDADES[n] !== undefined) {
+        current += UNIDADES[n];
+      } else if(n === 'y') {
+        // conector "veinte y tres" → ignorar
+      }
+    }
+    return total + current;
+  }
+
+  // Todas las palabras numéricas conocidas
+  const todasPalabras = new Set([
+    ...Object.keys(UNIDADES), ...Object.keys(DECENAS), ...Object.keys(CENTENAS),
+    'mil','y',
+    // versiones con tilde normalizadas
+    'treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'
+  ]);
+
+  // Procesar el texto palabra por palabra
+  const tokens = texto.split(/\b/);
+  let resultado = '';
+  let buffer = [];
+  let i = 0;
+
+  function flushBuffer() {
+    if(buffer.length > 0) {
+      const num = palabrasANum(buffer);
+      resultado += num;
+      buffer = [];
+    }
+  }
+
+  for(const token of tokens) {
+    const t = token.trim();
+    const tn = norm(t);
+    if(t === '' || t === ' ') {
+      if(buffer.length > 0) resultado += ' ';
+      else resultado += token;
+      continue;
+    }
+    if(todasPalabras.has(tn) && tn !== 'y') {
+      buffer.push(t);
+    } else if(tn === 'y' && buffer.length > 0) {
+      buffer.push(t); // conectar "veinte y tres"
+    } else {
+      flushBuffer();
+      resultado += token;
+    }
+  }
+  flushBuffer();
+
+  return resultado;
 }
 
 // Desregistrar Service Workers para evitar caché
