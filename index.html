@@ -579,7 +579,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
   <div id="admin-content" style="display:none;flex-direction:column;background:var(--navy-d);overflow-y:auto;-webkit-overflow-scrolling:touch">
     <div class="stat-bar" id="admin-stats"></div>
     <div class="filter-bar">
-      <input id="admin-filter" type="text" placeholder="Filtrar por patrulla, agente, fecha..." oninput="filtrarAdmin()">
+      <input id="admin-filter" type="text" placeholder="Buscar en cualquier dato (incidencias, vehículo, DNI...)" oninput="filtrarAdmin()">
       <button class="icon-btn" style="position:relative;flex-shrink:0" onclick="forzarSincronizacion()" title="Sincronizar pendientes">🔄<span id="cola-badge-admin" style="display:none;position:absolute;top:-4px;right:-4px;background:#e74c3c;color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;font-family:var(--mono)"></span></button>
     </div>
     <div id="admin-charts" style="padding:0 16px 12px"></div>
@@ -2228,15 +2228,27 @@ function renderAdminCharts(partes){
 }
 
 function filtrarAdmin(){
-  const q = document.getElementById('admin-filter').value.toLowerCase();
+  const q = document.getElementById('admin-filter').value.toLowerCase().trim();
   if(!q){ renderAdminList(todosPartes); return; }
-  const filtrados = todosPartes.filter(p=>
-    (p.patrulla||'').toLowerCase().includes(q) ||
-    (p.agentes||'').toLowerCase().includes(q) ||
-    (p.fecha||'').includes(q) ||
-    (p.firma||'').toLowerCase().includes(q) ||
-    (p.unidad||'').toLowerCase().includes(q)
-  );
+  const filtrados = todosPartes.filter(p=>{
+    // Buscar en todos los campos visibles y en el JSON completo de datos
+    // (incluye incidencias, observaciones, OAC, informes, etc.)
+    const camposBasicos = [
+      p.patrulla, p.agentes, p.fecha, p.firma, p.jefe,
+      p.unidad, p.turno, p.servicio, p.resumen, p.numInc,
+      p.fechaGuardado
+    ].map(v=>String(v||'').toLowerCase()).join(' ');
+
+    if(camposBasicos.includes(q)) return true;
+
+    // Buscar también dentro del JSON completo (incidencias, OAC, obs, vehiculo, etc.)
+    if(p.datos){
+      try{
+        if(p.datos.toLowerCase().includes(q)) return true;
+      }catch(e){}
+    }
+    return false;
+  });
   renderAdminList(filtrados);
 }
 
