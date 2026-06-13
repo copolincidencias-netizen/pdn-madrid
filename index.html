@@ -104,6 +104,10 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
 .toast.gold{border-color:var(--gold);color:var(--gold)}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(200,168,75,.2);border-radius:2px}
 
+#conn-dot.online{background:#2ecc71;box-shadow:0 0 4px rgba(46,204,113,.6)}
+#conn-dot.offline{background:#e74c3c;box-shadow:0 0 4px rgba(231,76,60,.6)}
+
+
 .chart-box{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--rl);padding:12px;margin-bottom:10px}
 .chart-title{font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:.08em;margin-bottom:10px;text-transform:uppercase}
 .chart-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
@@ -234,7 +238,10 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
     <div class="hdr-in">
       <div class="hdr-brand">
         <div class="hdr-badge">PM</div>
-        <div class="hdr-text"><h1>Policía Municipal Madrid</h1><p>PARTE DIARIO DE NOVEDADES</p></div>
+        <div class="hdr-text"><h1>Policía Municipal Madrid</h1><p>PARTE DIARIO DE NOVEDADES
+          <span id="conn-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:8px;vertical-align:middle"></span>
+          <span id="autosave-ind" style="opacity:0;transition:opacity .3s;font-size:9px;color:var(--gold);margin-left:4px;vertical-align:middle">●guardado</span>
+        </p></div>
       </div>
       <div style="display:flex;gap:6px">
         <button class="icon-btn" id="btn-tema" onclick="toggleTema()" title="Cambiar tema">☀️</button>
@@ -2222,6 +2229,7 @@ function renderAdminList(partes){
       <div class="parte-card-acts">
         <button class="abtn pdf" onclick="verPartePDF(${i})">↓ PDF</button>
         <button class="abtn" onclick="verParteDetalle(${i})">👁 Ver</button>
+        <button class="abtn" style="color:#e74c3c;border-color:rgba(231,76,60,.3)" onclick="eliminarParteAdmin(${i})">🗑 Eliminar</button>
       </div>
     </div>`;
   }).join('');
@@ -3195,6 +3203,81 @@ async function forzarSincronizacion(){
   const r = await sincronizarCola(false);
   actualizarBadgeCola();
   if(r.total===0) toast('No hay partes pendientes','gold');
+}
+
+
+// ── Autoguardado automático cada 30 segundos ──────────────────────────────────
+function guardarSilencioso(){
+  try{
+    const data=getData();
+    if(!data.patrulla&&!data.fecha) return; // nada que guardar aún
+    const idx=partes.findIndex(p=>p.id===data.id);
+    if(idx>=0)partes[idx]=data;else partes.unshift(data);
+    localStorage.setItem('pdn_v5',JSON.stringify(partes));
+    editId=data.id;
+    // Indicador discreto de autoguardado
+    const ind=document.getElementById('autosave-ind');
+    if(ind){
+      ind.style.opacity='1';
+      setTimeout(()=>{ind.style.opacity='0';},1500);
+    }
+  }catch(e){console.error('Error autoguardado:',e);}
+}
+
+// Solo autoguardar si la pantalla del formulario está activa
+setInterval(()=>{
+  const sc=document.getElementById('sc-form');
+  if(sc && sc.classList.contains('active')) guardarSilencioso();
+}, 30000);
+
+
+// ── Indicador de conexión online/offline ──────────────────────────────────────
+function actualizarIndicadorConexion(){
+  const dot = document.getElementById('conn-dot');
+  if(!dot) return;
+  if(navigator.onLine){
+    dot.classList.remove('offline'); dot.classList.add('online');
+    dot.title = 'Conectado';
+  } else {
+    dot.classList.remove('online'); dot.classList.add('offline');
+    dot.title = 'Sin conexión - los partes se guardarán localmente';
+  }
+}
+window.addEventListener('online', actualizarIndicadorConexion);
+window.addEventListener('offline', actualizarIndicadorConexion);
+window.addEventListener('load', actualizarIndicadorConexion);
+
+
+// ── Eliminar parte (administrador) ────────────────────────────────────────────
+async function eliminarParteAdmin(idx){
+  const p = todosPartes[idx];
+  if(!p) return;
+  const fd = p.fecha ? new Date(p.fecha+'T12:00').toLocaleDateString('es-ES') : 'sin fecha';
+  const conf = confirm(`¿Eliminar definitivamente este parte?\n\nPatrulla: ${p.patrulla||'—'}\nFecha: ${fd}\nJefe: ${p.firma||p.jefe||'—'}\n\nEsta acción no se puede deshacer.`);
+  if(!conf) return;
+
+  toast('Eliminando parte...','gold');
+  try{
+    const params = new URLSearchParams({
+      action: 'eliminar',
+      fechaGuardado: p.fechaGuardado
+    });
+    const resp = await fetch(`${SCRIPT_URL}?${params.toString()}`, {redirect:'follow'});
+    const data = await resp.json();
+    if(data.ok){
+      toast('✓ Parte eliminado','gold');
+      // Quitar de la lista local y refrescar
+      todosPartes.splice(idx,1);
+      renderAdminStats(todosPartes);
+      const q = document.getElementById('admin-filter')?.value;
+      if(q) filtrarAdmin(); else renderAdminList(todosPartes);
+    } else {
+      toast('Error al eliminar: '+(data.error||'desconocido'));
+    }
+  } catch(e){
+    console.error(e);
+    toast('Error de conexión al eliminar');
+  }
 }
 
 // Desregistrar Service Workers para evitar caché
