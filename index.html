@@ -2119,12 +2119,19 @@ async function cargarTodosPartes(){
     return;
   }
   todosPartes = partes;
+  // Debug temporal: mostrar info básica antes de renderizar
+  const debugInfo = `<div style="padding:10px 16px;font-family:var(--mono);font-size:10px;color:#2ecc71;background:rgba(46,204,113,.08);border-bottom:1px solid rgba(46,204,113,.2)">
+    DEBUG: partes.length=${partes.length} · typeof=${typeof partes}<br>
+    Primer elemento: ${partes[0] ? JSON.stringify(partes[0]).substring(0,200) : 'N/A'}
+  </div>`;
+
   // Renderizar lista y graficos por separado: si uno falla, el otro sigue
   try{
     renderAdminList(partes);
+    list.insertAdjacentHTML('afterbegin', debugInfo);
   }catch(e){
     console.error('Error renderAdminList:', e);
-    list.innerHTML = '<div class="empty"><span class="ic">⚠️</span><p>Error mostrando la lista:<br>'+e.message+'</p></div>';
+    list.innerHTML = debugInfo + '<div class="empty"><span class="ic">⚠️</span><p>Error mostrando la lista:<br>'+e.message+'<br><br>Stack: '+e.stack+'</p></div>';
   }
   try{
     renderAdminStats(partes);
