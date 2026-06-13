@@ -2163,7 +2163,15 @@ function renderAdminCharts(partes){
   const porMes = {};
   partes.forEach(p=>{
     if(!p.fecha) return;
-    const mes = p.fecha.slice(0,7); // YYYY-MM
+    let mes;
+    if(/^\d{4}-\d{2}/.test(p.fecha)){
+      mes = p.fecha.slice(0,7); // YYYY-MM
+    } else {
+      // Formato de fecha antiguo/distinto: intentar parsear como Date
+      const d = new Date(p.fecha);
+      if(isNaN(d.getTime())) return;
+      mes = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    }
     porMes[mes] = (porMes[mes]||0) + 1;
   });
 
