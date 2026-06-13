@@ -1146,6 +1146,8 @@ function cargar(id){
   ].forEach(k=>s(k,p[k]||0));
   document.getElementById('inc-cont').innerHTML='';incN=0;
   (p.incidencias||[]).forEach(inc=>addInc(inc));
+  document.getElementById('oac-cont').innerHTML='';oacN=0;
+  (p.oacs||[]).forEach(o=>addOac(o));
   const matN=['Linterna','3 Conos','Capuchón','Guía Callejero','Extintor','Señaliz. Alcohol','Triángulos','Carpeta','l Señal luminosa Azul (Veh. Camuflados)'];
   const mat=p.material||[];
   for(let i=1;i<=9;i++){const e=document.getElementById('m'+i);if(e)e.checked=mat.includes(matN[i-1]);}
