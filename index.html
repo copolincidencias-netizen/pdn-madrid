@@ -104,6 +104,15 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
 .toast.gold{border-color:var(--gold);color:var(--gold)}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(200,168,75,.2);border-radius:2px}
 
+.chart-box{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--rl);padding:12px;margin-bottom:10px}
+.chart-title{font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:.08em;margin-bottom:10px;text-transform:uppercase}
+.chart-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.chart-bar-label{font-size:10px;color:var(--muted);min-width:78px;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chart-bar-track{flex:1;height:14px;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden}
+.chart-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold-d),var(--gold));border-radius:4px;transition:width .3s}
+.chart-bar-val{font-size:10px;color:var(--white);font-family:var(--mono);min-width:24px;text-align:right}
+
+
 .oac-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--rl);padding:12px;margin-bottom:10px}
 .oac-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .oac-card-hdr span{font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:.08em}
@@ -232,7 +241,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
         <button class="icon-btn" onclick="showMis()" title="Mis partes">👤</button>
         <button class="icon-btn" onclick="showAdmin()" title="Administrador">🔑</button>
         <button class="icon-btn" onclick="nuevoF()">✚</button>
-        <button class="icon-btn" onclick="showG()">☰</button>
+        <button class="icon-btn" style="position:relative" onclick="showG()">☰<span id="cola-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#e74c3c;color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;font-family:var(--mono)"></span></button>
       </div>
     </div>
   </div>
@@ -492,9 +501,15 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
         <button class="icon-btn" onclick="showF()" style="margin-right:4px">←</button>
         <div class="hdr-text"><h1>Partes guardados</h1><p>HISTORIAL LOCAL</p></div>
       </div>
-      <button class="icon-btn" onclick="nuevoF()">✚</button>
+      <div style="display:flex;gap:6px">
+        <button class="icon-btn" onclick="exportarBackup()" title="Exportar copia de seguridad">⭳</button>
+        <button class="icon-btn" onclick="document.getElementById('backup-file').click()" title="Restaurar copia">⭱</button>
+        <input type="file" id="backup-file" accept=".json" style="display:none" onchange="importarBackup(event)">
+        <button class="icon-btn" onclick="nuevoF()">✚</button>
+      </div>
     </div>
   </div>
+  <div id="cola-pendiente-bar" style="display:none;padding:8px 16px;background:rgba(231,76,60,.1);border-bottom:1px solid rgba(231,76,60,.2);font-size:11px;color:#e74c3c;text-align:center;font-family:var(--mono)"></div>
   <div class="scroll" style="padding-bottom:20px;background:var(--navy-d)">
     <div class="plist" id="glist"></div>
   </div>
@@ -556,8 +571,10 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
   </div>
   <div id="admin-content" style="display:none;flex:1;flex-direction:column;overflow:hidden;background:var(--navy-d)">
     <div class="stat-bar" id="admin-stats"></div>
+    <div id="admin-charts" style="padding:0 16px 12px"></div>
     <div class="filter-bar">
       <input id="admin-filter" type="text" placeholder="Filtrar por patrulla, agente, fecha..." oninput="filtrarAdmin()">
+      <button class="icon-btn" style="position:relative;flex-shrink:0" onclick="forzarSincronizacion()" title="Sincronizar pendientes">🔄<span id="cola-badge-admin" style="display:none;position:absolute;top:-4px;right:-4px;background:#e74c3c;color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;font-family:var(--mono)"></span></button>
     </div>
     <div class="scroll" style="padding-bottom:20px">
       <div class="plist" id="admin-list"></div>
@@ -1033,6 +1050,17 @@ function showG(){
     const e=document.getElementById(id); if(e) e.classList.remove('active');
   });
   document.getElementById('sc-guard').classList.add('active');
+  // Mostrar barra de partes pendientes de sincronizar
+  const cola = getCola();
+  const bar = document.getElementById('cola-pendiente-bar');
+  if(bar){
+    if(cola.length>0){
+      bar.style.display='block';
+      bar.textContent = `⏳ ${cola.length} parte(s) pendiente(s) de registrar (se sincronizarán al recuperar conexión)`;
+    } else {
+      bar.style.display='none';
+    }
+  }
 }
 
 // ── Incidencias ───────────────────────────────────────────────────────────────
@@ -1698,11 +1726,29 @@ const GH_REPO  = 'pdn-madrid';
 const GH_TOKEN = localStorage.getItem('pdn_gh_token') || '';
 const GH_BRANCH= 'main';
 
+function validarParte(p){
+  const avisos=[];
+  if(!p.patrulla) avisos.push('Falta el número de patrulla');
+  if(!p.fecha) avisos.push('Falta la fecha del servicio');
+  if(!p.turno) avisos.push('Falta seleccionar el turno');
+  if(!p.jefe) avisos.push('Falta el nº de carné del jefe de equipo');
+  const incVacias=(p.incidencias||[]).filter(i=>i.hi && !i.desc);
+  if(incVacias.length>0) avisos.push(incVacias.length+' incidencia(s) con hora pero sin descripción');
+  return avisos;
+}
+
 async function exportarYSubir(){
   ordenarIncidencias();
   guardar();
   const p=getData();
   if(!p.patrulla&&!p.fecha){toast('Completa patrulla y fecha primero');return;}
+
+  // Validación de campos antes de exportar
+  const avisos=validarParte(p);
+  if(avisos.length>0){
+    const continuar=confirm('Atención, faltan datos:\n\n- '+avisos.join('\n- ')+'\n\n¿Exportar de todas formas?');
+    if(!continuar) return;
+  }
 
   // Leer token desde localStorage
   const ghToken = localStorage.getItem('pdn_gh_token') || '';
@@ -1795,7 +1841,7 @@ async function exportarYSubir(){
   if(sheetOk){
     toast('✓ Parte registrado en el sistema','gold');
   } else {
-    toast('PDF generado (sin conexión al registro)');
+    toast('PDF generado · Se sincronizará cuando haya conexión');
   }
 }
 
@@ -1921,7 +1967,7 @@ let SCRIPT_URL = localStorage.getItem('pdn_script_url') || 'https://script.googl
 const ADMIN_PASS = 'R9277.0.'; // Contraseña administrador
 
 // ── Guardar parte via Apps Script ─────────────────────────────────────────────
-async function guardarEnSheets(p) {
+async function guardarEnSheetsDirecto(p) {
   if(!SCRIPT_URL){ console.log('Sin URL de script'); return false; }
   try {
     // Primero intentar con POST (más datos)
@@ -1960,6 +2006,22 @@ async function guardarEnSheets(p) {
     }
   }
 }
+
+// Wrapper: intenta guardar directo, si falla o sin conexión, encola para después
+async function guardarEnSheets(p){
+  if(!navigator.onLine){
+    encolarParte(p);
+    actualizarBadgeCola();
+    return false;
+  }
+  const ok = await guardarEnSheetsDirecto(p);
+  if(!ok){
+    encolarParte(p);
+  }
+  actualizarBadgeCola();
+  return ok;
+}
+
 
 // ── Buscar partes por nº de agente ────────────────────────────────────────────
 async function buscarPartesPorAgente(numCarnet) {
@@ -2067,6 +2129,64 @@ function renderAdminStats(partes){
     <div class="stat-item"><div class="num">${totalInc}</div><div class="lbl">INCIDENCIAS</div></div>
     <div class="stat-item"><div class="num">${agentesUnicos}</div><div class="lbl">AGENTES</div></div>
   `;
+  renderAdminCharts(partes);
+}
+
+// Genera barras horizontales para un conjunto de datos {etiqueta: valor}
+function chartBars(titulo, datos, maxItems){
+  const entries = Object.entries(datos).sort((a,b)=>b[1]-a[1]).slice(0, maxItems||6);
+  if(entries.length===0) return '';
+  const max = Math.max(...entries.map(e=>e[1]));
+  const rows = entries.map(([label,val])=>{
+    const pct = max>0 ? (val/max*100) : 0;
+    return `<div class="chart-bar-row">
+      <div class="chart-bar-label" title="${label}">${label}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${pct}%"></div></div>
+      <div class="chart-bar-val">${val}</div>
+    </div>`;
+  }).join('');
+  return `<div class="chart-box"><div class="chart-title">${titulo}</div>${rows}</div>`;
+}
+
+function renderAdminCharts(partes){
+  const cont = document.getElementById('admin-charts');
+  if(!cont) return;
+
+  // 1. Partes por mes
+  const porMes = {};
+  partes.forEach(p=>{
+    if(!p.fecha) return;
+    const mes = p.fecha.slice(0,7); // YYYY-MM
+    porMes[mes] = (porMes[mes]||0) + 1;
+  });
+
+  // 2. Incidencias por patrulla
+  const porPatrulla = {};
+  partes.forEach(p=>{
+    const pat = p.patrulla || 'Sin patrulla';
+    porPatrulla[pat] = (porPatrulla[pat]||0) + parseInt(p.numInc||0);
+  });
+
+  // 3. Partes por turno
+  const porTurno = {};
+  partes.forEach(p=>{
+    let t = (p.turno||'').split(' ')[0] || 'Sin turno';
+    porTurno[t] = (porTurno[t]||0) + 1;
+  });
+
+  // 4. Top agentes por nº de partes en los que aparecen
+  const porAgente = {};
+  partes.forEach(p=>{
+    (p.agentes||'').split(',').map(a=>a.trim()).filter(Boolean).forEach(ag=>{
+      porAgente[ag] = (porAgente[ag]||0) + 1;
+    });
+  });
+
+  cont.innerHTML =
+    chartBars('Partes por mes', porMes, 6) +
+    chartBars('Incidencias por patrulla', porPatrulla, 6) +
+    chartBars('Partes por turno', porTurno, 4) +
+    chartBars('Agentes más activos (nº partes)', porAgente, 8);
 }
 
 function filtrarAdmin(){
@@ -2942,6 +3062,139 @@ function ordenarIncidencias() {
   incData.forEach(({ card }) => cont.appendChild(card));
   
   toast('Incidencias ordenadas por hora ✓', 'gold');
+}
+
+
+// ── Cola de sincronización offline (Google Sheets) ────────────────────────────
+const COLA_KEY = 'pdn_cola_sync';
+
+function getCola(){
+  try { return JSON.parse(localStorage.getItem(COLA_KEY)||'[]'); }
+  catch(e){ return []; }
+}
+function setCola(cola){
+  localStorage.setItem(COLA_KEY, JSON.stringify(cola));
+}
+function encolarParte(p){
+  const cola = getCola();
+  cola.push({parte:p, ts:Date.now()});
+  setCola(cola);
+}
+
+// Intentar sincronizar todos los partes pendientes
+async function sincronizarCola(silencioso){
+  const cola = getCola();
+  if(cola.length === 0) return {ok:0, total:0};
+  if(!navigator.onLine) return {ok:0, total:cola.length, sinConexion:true};
+
+  let exitos = 0;
+  const restantes = [];
+  for(const item of cola){
+    const ok = await guardarEnSheetsDirecto(item.parte);
+    if(ok) exitos++;
+    else restantes.push(item);
+  }
+  setCola(restantes);
+  if(!silencioso && exitos>0){
+    toast(`✓ ${exitos} parte(s) pendiente(s) sincronizado(s)`, 'gold');
+  }
+  return {ok:exitos, total:cola.length, pendientes:restantes.length};
+}
+
+// Sincronizar automáticamente al recuperar conexión
+window.addEventListener('online', ()=>{
+  setTimeout(()=>{ sincronizarCola(false).then(()=>actualizarBadgeCola()); }, 1500);
+});
+
+// Sincronizar al cargar la app (por si quedaron pendientes de sesión anterior)
+window.addEventListener('load', ()=>{
+  actualizarBadgeCola();
+  setTimeout(()=>{ sincronizarCola(true).then(()=>actualizarBadgeCola()); }, 2000);
+});
+
+function actualizarBadgeCola(){
+  const cola = getCola();
+  ['cola-badge','cola-badge-admin'].forEach(id=>{
+    const badge = document.getElementById(id);
+    if(badge){
+      if(cola.length>0){ badge.textContent = cola.length; badge.style.display='flex'; }
+      else { badge.style.display='none'; }
+    }
+  });
+}
+
+
+// ── Copia de seguridad / restauración del historial local ────────────────────
+function exportarBackup(){
+  const data = {
+    version: 1,
+    fecha: new Date().toISOString(),
+    partes: JSON.parse(localStorage.getItem('pdn_v5')||'[]'),
+    cola: getCola(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fecha = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `PDN_backup_${fecha}.json`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  toast('Copia de seguridad descargada ✓','gold');
+}
+
+function importarBackup(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data.partes || !Array.isArray(data.partes)){
+        toast('Archivo de copia no válido');
+        return;
+      }
+      const actuales = JSON.parse(localStorage.getItem('pdn_v5')||'[]');
+      const idsActuales = new Set(actuales.map(p=>p.id));
+      // Fusionar: añadir solo los partes que no existan ya (por id)
+      let nuevos = 0;
+      data.partes.forEach(p=>{
+        if(!idsActuales.has(p.id)){
+          actuales.unshift(p);
+          idsActuales.add(p.id);
+          nuevos++;
+        }
+      });
+      localStorage.setItem('pdn_v5', JSON.stringify(actuales));
+      partes = actuales;
+      // Restaurar cola pendiente si la hay
+      if(data.cola && Array.isArray(data.cola)){
+        const colaActual = getCola();
+        const colaIds = new Set(colaActual.map(c=>c.parte.id));
+        data.cola.forEach(c=>{
+          if(!colaIds.has(c.parte.id)) colaActual.push(c);
+        });
+        setCola(colaActual);
+        actualizarBadgeCola();
+      }
+      renderG();
+      toast(`✓ ${nuevos} parte(s) restaurado(s)`,'gold');
+    } catch(err){
+      console.error(err);
+      toast('Error al leer el archivo de copia');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+
+async function forzarSincronizacion(){
+  if(!navigator.onLine){ toast('Sin conexión a internet'); return; }
+  toast('Sincronizando partes pendientes...','gold');
+  const r = await sincronizarCola(false);
+  actualizarBadgeCola();
+  if(r.total===0) toast('No hay partes pendientes','gold');
 }
 
 // Desregistrar Service Workers para evitar caché
