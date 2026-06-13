@@ -57,7 +57,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
 .tabs{display:flex;background:var(--navy);border-bottom:1px solid var(--border);flex-shrink:0}
 .tab{flex:1;padding:10px 4px;font-size:11px;font-family:var(--mono);letter-spacing:.04em;text-align:center;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none}
 .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
-.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:calc(var(--sb) + 80px)}
+.scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:calc(var(--sb) + 80px)}
 .sec{padding:12px 16px;border-bottom:1px solid rgba(200,168,75,.08)}
 .sec-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--gold-d);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .sec-lbl::after{content:'';flex:1;height:1px;background:var(--border)}
@@ -576,7 +576,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
       </div>
     </div>
   </div>
-  <div id="admin-content" style="display:none;flex:1;flex-direction:column;overflow:hidden;background:var(--navy-d)">
+  <div id="admin-content" style="display:none;flex:1;min-height:0;flex-direction:column;overflow:hidden;background:var(--navy-d)">
     <div class="stat-bar" id="admin-stats"></div>
     <div id="admin-charts" style="padding:0 16px 12px"></div>
     <div class="filter-bar">
@@ -2119,8 +2119,20 @@ async function cargarTodosPartes(){
     return;
   }
   todosPartes = partes;
-  renderAdminStats(partes);
-  renderAdminList(partes);
+  // Renderizar lista y graficos por separado: si uno falla, el otro sigue
+  try{
+    renderAdminList(partes);
+  }catch(e){
+    console.error('Error renderAdminList:', e);
+    list.innerHTML = '<div class="empty"><span class="ic">⚠️</span><p>Error mostrando la lista:<br>'+e.message+'</p></div>';
+  }
+  try{
+    renderAdminStats(partes);
+  }catch(e){
+    console.error('Error renderAdminStats:', e);
+    const stats=document.getElementById('admin-stats');
+    if(stats) stats.innerHTML = '<div style="padding:8px;font-size:11px;color:#e74c3c;font-family:var(--mono)">Error en estadisticas: '+e.message+'</div>';
+  }
 }
 
 function recargarAdmin(){
@@ -2136,7 +2148,13 @@ function renderAdminStats(partes){
     <div class="stat-item"><div class="num">${totalInc}</div><div class="lbl">INCIDENCIAS</div></div>
     <div class="stat-item"><div class="num">${agentesUnicos}</div><div class="lbl">AGENTES</div></div>
   `;
-  renderAdminCharts(partes);
+  try{
+    renderAdminCharts(partes);
+  }catch(e){
+    console.error('Error renderAdminCharts:', e);
+    const cont=document.getElementById('admin-charts');
+    if(cont) cont.innerHTML = '<div style="padding:8px;font-size:11px;color:#e74c3c;font-family:var(--mono)">Error en graficos: '+e.message+'</div>';
+  }
 }
 
 // Genera barras horizontales para un conjunto de datos {etiqueta: valor}
