@@ -576,16 +576,14 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
       </div>
     </div>
   </div>
-  <div id="admin-content" style="display:none;flex:1;min-height:0;flex-direction:column;overflow:hidden;background:var(--navy-d)">
+  <div id="admin-content" style="display:none;flex-direction:column;background:var(--navy-d);overflow-y:auto;-webkit-overflow-scrolling:touch">
     <div class="stat-bar" id="admin-stats"></div>
-    <div id="admin-charts" style="padding:0 16px 12px"></div>
     <div class="filter-bar">
       <input id="admin-filter" type="text" placeholder="Filtrar por patrulla, agente, fecha..." oninput="filtrarAdmin()">
       <button class="icon-btn" style="position:relative;flex-shrink:0" onclick="forzarSincronizacion()" title="Sincronizar pendientes">🔄<span id="cola-badge-admin" style="display:none;position:absolute;top:-4px;right:-4px;background:#e74c3c;color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;font-family:var(--mono)"></span></button>
     </div>
-    <div class="scroll" style="padding-bottom:20px">
-      <div class="plist" id="admin-list"></div>
-    </div>
+    <div id="admin-charts" style="padding:0 16px 12px"></div>
+    <div class="plist" id="admin-list" style="padding-bottom:80px"></div>
   </div>
 </div>
 
