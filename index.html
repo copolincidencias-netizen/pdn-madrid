@@ -3307,15 +3307,20 @@ async function eliminarParteAdmin(idx){
     });
     const resp = await fetch(`${SCRIPT_URL}?${params.toString()}`, {redirect:'follow'});
     const data = await resp.json();
-    if(data.ok){
-      toast('✓ Parte eliminado','gold');
+    // Verificación estricta: el script debe confirmar data.data.eliminado === true
+    // Si devuelve {msg:'PDN API activa'} significa que el Apps Script NO tiene
+    // la función 'eliminar' actualizada (version antigua desplegada)
+    if(data.ok && data.data && data.data.eliminado === true){
+      toast('✓ Parte eliminado del registro','gold');
       // Quitar de la lista local y refrescar
       todosPartes.splice(idx,1);
       renderAdminStats(todosPartes);
       const q = document.getElementById('admin-filter')?.value;
       if(q) filtrarAdmin(); else renderAdminList(todosPartes);
+    } else if(data.ok && data.data && data.data.msg==='PDN API activa'){
+      toast('⚠️ Apps Script desactualizado: actualiza el script para poder eliminar');
     } else {
-      toast('Error al eliminar: '+(data.error||'desconocido'));
+      toast('Error al eliminar: '+(data.error||(data.data&&data.data.error)||'respuesta inesperada'));
     }
   } catch(e){
     console.error(e);
