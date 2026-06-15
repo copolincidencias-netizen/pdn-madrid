@@ -246,6 +246,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
       <div style="display:flex;gap:6px">
         <button class="icon-btn" id="btn-tema" onclick="toggleTema()" title="Cambiar tema">☀️</button>
         <button class="icon-btn" onclick="showMis()" title="Mis partes">👤</button>
+        <button class="icon-btn" onclick="showConfig()" title="Configuración">⚙️</button>
         <button class="icon-btn" onclick="showAdmin()" title="Administrador">🔑</button>
         <button class="icon-btn" onclick="nuevoF()">✚</button>
         <button class="icon-btn" style="position:relative" onclick="showG()">☰<span id="cola-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#e74c3c;color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;font-family:var(--mono)"></span></button>
@@ -523,6 +524,42 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
 </div>
 
 
+<!-- PANTALLA CONFIGURACION DEL DISPOSITIVO -->
+<div class="screen" id="sc-config" style="background:var(--navy-d)">
+  <div class="hdr">
+    <div class="hdr-in">
+      <div class="hdr-brand">
+        <button class="icon-btn" onclick="showF()" style="margin-right:4px">←</button>
+        <div class="hdr-text"><h1>Configuración</h1><p>AJUSTES DE ESTE DISPOSITIVO</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll" style="padding-bottom:20px">
+    <div class="admin-login" style="text-align:left;padding:20px 16px">
+      <p style="margin-bottom:8px;font-size:11px;color:var(--muted)">URL del sistema (Apps Script)</p>
+      <input id="script-url-input" type="text" placeholder="https://script.google.com/macros/s/..." 
+        style="width:100%;font-size:11px;letter-spacing:0;padding:10px;margin-bottom:8px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:var(--r);color:var(--white);font-family:var(--mono)"
+        value="" onchange="guardarScriptUrl()">
+      <button onclick="guardarScriptUrl()" style="width:100%;padding:11px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--rl);color:var(--muted);font-size:13px;cursor:pointer;margin-bottom:20px;font-family:var(--font)">
+        💾 Guardar URL sistema
+      </button>
+
+      <p style="margin-bottom:8px;font-size:11px;color:var(--muted)">Token GitHub (para subir PDFs al repositorio)</p>
+      <input id="gh-token-input" type="password" placeholder="github_pat_..." 
+        style="width:100%;font-size:11px;letter-spacing:0;padding:10px;margin-bottom:8px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:var(--r);color:var(--white);font-family:var(--mono)">
+      <button onclick="guardarGHToken()" style="width:100%;padding:11px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--rl);color:var(--muted);font-size:13px;cursor:pointer;font-family:var(--font)">
+        💾 Guardar Token GitHub
+      </button>
+
+      <div id="token-status" style="margin-top:12px;font-size:11px;font-family:var(--mono);color:var(--muted)"></div>
+
+      <p style="margin-top:24px;font-size:11px;color:var(--muted);line-height:1.6">
+        Esta configuración se guarda solo en este dispositivo. Cada agente debe configurarla una vez en su propio móvil para poder subir los partes al repositorio y registrarlos en el sistema.
+      </p>
+    </div>
+  </div>
+</div>
+
 <!-- PANTALLA MIS PARTES -->
 <div class="screen" id="sc-mis" style="background:var(--navy-d)">
   <div class="hdr">
@@ -559,21 +596,6 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
       <p>Introduce la contraseña de administrador</p>
       <input id="admin-pass" type="password" placeholder="Contraseña" onkeydown="if(event.key==='Enter')loginAdmin()">
       <button class="search-btn" onclick="loginAdmin()">Entrar</button>
-      <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:16px">
-        <p style="margin-bottom:8px;font-size:11px;color:var(--muted)">URL del sistema (configuración)</p>
-        <input id="script-url-input" type="text" placeholder="https://script.google.com/macros/s/..." 
-          style="font-size:11px;letter-spacing:0;padding:8px;margin-bottom:8px"
-          value="" onchange="guardarScriptUrl()">
-        <button onclick="guardarScriptUrl()" style="width:100%;padding:9px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--r);color:var(--muted);font-size:12px;cursor:pointer;margin-bottom:12px">
-          💾 Guardar URL sistema
-        </button>
-        <p style="margin-bottom:8px;font-size:11px;color:var(--muted)">Token GitHub (para subir PDFs)</p>
-        <input id="gh-token-input" type="password" placeholder="github_pat_..." 
-          style="font-size:11px;letter-spacing:0;padding:8px;margin-bottom:8px">
-        <button onclick="guardarGHToken()" style="width:100%;padding:9px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--r);color:var(--muted);font-size:12px;cursor:pointer">
-          💾 Guardar Token GitHub
-        </button>
-      </div>
     </div>
   </div>
   <div id="admin-content" style="display:none;flex-direction:column;background:var(--navy-d);overflow-y:auto;-webkit-overflow-scrolling:touch">
@@ -1044,14 +1066,14 @@ function g(id){return (document.getElementById(id)||{}).value||'';}
 function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
 function toast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(type?' '+type:'')+' show';setTimeout(()=>t.className='toast',2500);}
 function showF(){
-  ['sc-guard','sc-mis','sc-admin'].forEach(id=>{
+  ['sc-guard','sc-mis','sc-admin','sc-config'].forEach(id=>{
     const e=document.getElementById(id); if(e) e.classList.remove('active');
   });
   document.getElementById('sc-form').classList.add('active');
 }
 function showG(){
   renderG();
-  ['sc-form','sc-mis','sc-admin'].forEach(id=>{
+  ['sc-form','sc-mis','sc-admin','sc-config'].forEach(id=>{
     const e=document.getElementById(id); if(e) e.classList.remove('active');
   });
   document.getElementById('sc-guard').classList.add('active');
@@ -2058,14 +2080,14 @@ async function obtenerTodosPartes() {
 
 // ── Navegación nuevas pantallas ───────────────────────────────────────────────
 function showMis(){
-  ['sc-form','sc-guard','sc-admin'].forEach(id=>{
+  ['sc-form','sc-guard','sc-admin','sc-config'].forEach(id=>{
     document.getElementById(id).classList.remove('active');
   });
   document.getElementById('sc-mis').classList.add('active');
 }
 function showAdmin(){
-  ['sc-form','sc-guard','sc-mis'].forEach(id=>{
-    document.getElementById(id).classList.remove('active');
+  ['sc-form','sc-guard','sc-mis','sc-config'].forEach(id=>{
+    const e=document.getElementById(id); if(e) e.classList.remove('active');
   });
   document.getElementById('sc-admin').classList.add('active');
 }
@@ -2287,23 +2309,24 @@ async function buscarMisPartes(){
   const list = document.getElementById('mis-list');
   list.innerHTML = '<div class="loading"><span class="spin">⏳</span><p style="margin-top:10px;font-size:12px;color:var(--muted)">Buscando tus partes...</p></div>';
   
-  // Buscar por número exacto primero
-  let partes = await buscarPartesPorAgente(num);
-  
-  // Si no hay resultados y tiene 4+ dígitos, buscar por prefijo en todos los partes
-  if(partes && partes.length === 0 && num.length >= 4){
-    const todos = await obtenerTodosPartes();
-    if(todos){
-      partes = todos.filter(p=>{
-        const agentes = (p.agentes||'').split(',').map(a=>a.trim());
-        return agentes.some(a=> a === num || a.startsWith(num));
-      });
-    }
-  }
-  if(partes === null){
+  // Obtener TODOS los partes y filtrar localmente: garantiza que se
+  // encuentran todas las variantes del nº de carné (ej. "9277" y "9277.0")
+  // independientemente de cómo esté escrito en cada parte concreto.
+  const todos = await obtenerTodosPartes();
+  if(todos === null){
     list.innerHTML = '<div class="empty"><span class="ic">⚠️</span><p>Error al conectar.<br>Comprueba la conexión.</p></div>';
     return;
   }
+  const partesMap = new Map();
+  todos.forEach(p=>{
+    const agentes = (p.agentes||'').split(',').map(a=>a.trim()).filter(Boolean);
+    const coincide = agentes.some(a => a === num || (num.length>=4 && (a.startsWith(num) || num.startsWith(a))));
+    if(coincide){
+      // Usar fechaGuardado como clave para evitar duplicados
+      partesMap.set(p.fechaGuardado || JSON.stringify(p), p);
+    }
+  });
+  const partes = Array.from(partesMap.values());
   if(!partes.length){
     list.innerHTML = `<div class="empty"><span class="ic">🔍</span><p>No se encontraron partes<br>para el nº ${num}</p></div>`;
     return;
@@ -3340,6 +3363,26 @@ function formatFechaCorta(fechaStr){
   }
   if(isNaN(d.getTime())) return 'Sin fecha';
   return d.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+
+function showConfig(){
+  // Cargar valores actuales guardados
+  const url = localStorage.getItem('pdn_script_url')||'';
+  const token = localStorage.getItem('pdn_gh_token')||'';
+  const urlInput = document.getElementById('script-url-input');
+  if(urlInput) urlInput.value = url;
+  const status = document.getElementById('token-status');
+  if(status){
+    status.textContent = token
+      ? '✓ Token GitHub configurado en este dispositivo'
+      : '⚠ Token GitHub no configurado: los partes no se subirán al repositorio';
+    status.style.color = token ? '#2ecc71' : '#e74c3c';
+  }
+  ['sc-form','sc-guard','sc-mis','sc-admin'].forEach(id=>{
+    const e=document.getElementById(id); if(e) e.classList.remove('active');
+  });
+  document.getElementById('sc-config').classList.add('active');
 }
 
 // Desregistrar Service Workers para evitar caché
