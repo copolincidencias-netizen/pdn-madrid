@@ -2259,7 +2259,7 @@ function renderAdminList(partes){
     return;
   }
   list.innerHTML = partes.map((p,i)=>{
-    const fd = p.fecha ? new Date(p.fecha+'T12:00').toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'}) : 'Sin fecha';
+    const fd = formatFechaCorta(p.fecha);
     const fSave = p.fechaGuardado ? new Date(p.fechaGuardado).toLocaleString('es-ES') : '';
     return `<div class="parte-card">
       <div class="parte-card-top">
@@ -2311,7 +2311,7 @@ async function buscarMisPartes(){
   
   list.innerHTML = `<div style="padding:8px 16px;font-family:var(--mono);font-size:10px;color:var(--muted)">${partes.length} parte(s) encontrado(s) para nº ${num}</div>` +
   partes.map((p,i)=>{
-    const fd = p.fecha ? new Date(p.fecha+'T12:00').toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'}) : 'Sin fecha';
+    const fd = formatFechaCorta(p.fecha);
     return `<div class="parte-card">
       <div class="parte-card-top">
         <h3>🚔 ${p.patrulla||'—'} · ${fd}</h3>
@@ -3295,7 +3295,7 @@ window.addEventListener('load', actualizarIndicadorConexion);
 async function eliminarParteAdmin(idx){
   const p = todosPartes[idx];
   if(!p) return;
-  const fd = p.fecha ? new Date(p.fecha+'T12:00').toLocaleDateString('es-ES') : 'sin fecha';
+  const fd = formatFechaCorta(p.fecha);
   const conf = confirm(`¿Eliminar definitivamente este parte?\n\nPatrulla: ${p.patrulla||'—'}\nFecha: ${fd}\nJefe: ${p.firma||p.jefe||'—'}\n\nEsta acción no se puede deshacer.`);
   if(!conf) return;
 
@@ -3326,6 +3326,20 @@ async function eliminarParteAdmin(idx){
     console.error(e);
     toast('Error de conexión al eliminar');
   }
+}
+
+
+// ── Formatear fecha de forma robusta (acepta YYYY-MM-DD u otros formatos) ────
+function formatFechaCorta(fechaStr){
+  if(!fechaStr) return 'Sin fecha';
+  let d;
+  if(/^\d{4}-\d{2}-\d{2}/.test(fechaStr)){
+    d = new Date(fechaStr+'T12:00');
+  } else {
+    d = new Date(fechaStr);
+  }
+  if(isNaN(d.getTime())) return 'Sin fecha';
+  return d.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'});
 }
 
 // Desregistrar Service Workers para evitar caché
