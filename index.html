@@ -1234,6 +1234,43 @@ function cargar(id){
   (p.incidencias||[]).forEach(inc=>addInc(inc));
   document.getElementById('oac-cont').innerHTML='';oacN=0;
   (p.oacs||[]).forEach(o=>addOac(o));
+
+  // Restaurar informes (Auxilio, Bomberos, Accidente) y reabrir su panel si tenian datos
+  limpiarInformes();
+  if(p.informes && p.informes.auxilio){
+    const a=p.informes.auxilio;
+    s('aux-req',a.req); s('aux-fecha',a.fecha); s('aux-hora',a.hora); s('aux-calle',a.calle);
+    const eH=document.getElementById('aux-herida'); if(eH) eH.checked=!!a.herida;
+    const eE=document.getElementById('aux-enferma'); if(eE) eE.checked=!!a.enferma;
+    s('aux-nombre',a.nombre); s('aux-edad',a.edad); s('aux-dni',a.dni);
+    s('aux-dom',a.dom); s('aux-tel',a.tel); s('aux-asist',a.asist);
+    s('aux-trasl',a.trasl); s('aux-motivo',a.motivo); s('aux-jefe',a.jefe);
+    const btn=document.getElementById('btn-auxilio'); const body=document.getElementById('body-auxilio');
+    if(btn) btn.classList.add('active'); if(body) body.classList.add('open');
+  }
+  if(p.informes && p.informes.bomberos){
+    const b=p.informes.bomberos;
+    s('bom-req',b.req); s('bom-fecha',b.fecha); s('bom-hora',b.hora); s('bom-calle',b.calle);
+    const eV=document.getElementById('bom-viv'); if(eV) eV.checked=!!b.vivienda;
+    const eP=document.getElementById('bom-pas'); if(eP) eP.checked=!!b.pastos;
+    s('bom-parque',b.parque); s('bom-dotac',b.dotac); s('bom-h1',b.h1); s('bom-h2',b.h2);
+    s('bom-titular',b.titular); s('bom-dom',b.dom); s('bom-dni',b.dni);
+    s('bom-tel',b.tel); s('bom-motivo',b.motivo); s('bom-jefe',b.jefe);
+    const btn=document.getElementById('btn-bomberos'); const body=document.getElementById('body-bomberos');
+    if(btn) btn.classList.add('active'); if(body) body.classList.add('open');
+  }
+  if(p.informes && p.informes.accidente){
+    const c=p.informes.accidente;
+    s('acc-nreg',c.nreg); s('acc-natest',c.natest); s('acc-fecha',c.fecha); s('acc-hora',c.hora);
+    s('acc-lugar',c.lugar); s('acc-desc',c.desc); s('acc-nom1',c.nom1); s('acc-dni1',c.dni1);
+    s('acc-tel1',c.tel1); s('acc-dom1',c.dom1); s('acc-les1',c.les1);
+    s('acc-asist1',c.asist1); s('acc-trasl1',c.trasl1); s('acc-tarea1',c.tarea1);
+    s('acc-emp',c.emp); s('acc-nif',c.nif); s('acc-obs',c.obs);
+    s('acc-firma1',c.firma1); s('acc-firma2',c.firma2);
+    const btn=document.getElementById('btn-accidente'); const body=document.getElementById('body-accidente');
+    if(btn) btn.classList.add('active'); if(body) body.classList.add('open');
+  }
+
   const matN=['Linterna','3 Conos','Capuchón','Guía Callejero','Extintor','Señaliz. Alcohol','Triángulos','Carpeta','l Señal luminosa Azul (Veh. Camuflados)'];
   const mat=p.material||[];
   for(let i=1;i<=9;i++){const e=document.getElementById('m'+i);if(e)e.checked=mat.includes(matN[i-1]);}
