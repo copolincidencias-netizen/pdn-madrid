@@ -1203,6 +1203,7 @@ function getData(){
     e_ie:g('e_ie'),e_bomb:g('e_bomb'),e_le:g('e_le'),e_idv:g('e_idv'),
     e_idp:g('e_idp'),e_at:g('e_at'),e_sim:g('e_sim'),e_dro:g('e_dro'),e_arm:g('e_arm'),
     oacs:getOacData(),
+    informes:getInformesData(),
     fechaGuardado:new Date().toISOString()
   };
 }
@@ -1639,6 +1640,7 @@ function _buildPDF(doc,p){
         });
       }
     }
+    return y + matTotalH; // posicion Y final tras dibujar todo el estadillo
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1726,52 +1728,75 @@ function _buildPDF(doc,p){
   txt('INCIDENCIA O HECHO OCURRIDO', CX_I+CW_I/2, T2_TOP+4, {bold:true, sz:10, align:'center'});
   vline(CX_L, T2_TOP, T2_TOP+6, 0.3); vline(CX_I, T2_TOP, T2_TOP+6, 0.3);
 
-  // Calcular espacio disponible para estadillo
-  const EST_H = 9+22+14+(9*4.8)+2+(6*4.2)+4; // aprox 145mm
-  const T2_BOT_TABLE = FOOTER_Y - EST_H;
-
+  // ── Volcar incidencias restantes (r2) en pág 2, paginando a más páginas
+  // si no caben todas (sin recortar ni perder ninguna incidencia) ───────────
   let yT2=T2_TOP+6, yT2Top=T2_TOP+6;
-  r2.forEach(([inc,rh])=>{
-    const adj=Math.min(rh, T2_BOT_TABLE-yT2-1);
-    if(adj<4)return;
-    drawRow(inc,yT2,adj);yT2+=adj;
-  });
+  let paginaActual=2;
+  let pendientes=[...r2];
+
+  while(pendientes.length>0){
+    const [inc,rh]=pendientes[0];
+    if(yT2+rh > FOOTER_Y-2){
+      // No cabe más en esta página: cerrar tabla y crear página nueva
+      drawTablaBorde(yT2Top, yT2);
+      doc.addPage();
+      paginaActual++;
+      drawCabecera(paginaActual, 1);
+      // Cabecera de tabla en la nueva página
+      const T3_TOP=18;
+      fillRect(LM, T3_TOP, PW, 6, ...C_GRAY_LIGHT);
+      setDraw(...C_BLACK); setLW(0.3); doc.rect(LM,T3_TOP,PW,6,'S');
+      txt('HORA', CX_H+CW_H/2, T3_TOP+4, {bold:true, sz:10, align:'center'});
+      txt('LUGAR', CX_L+CW_L/2, T3_TOP+4, {bold:true, sz:10, align:'center'});
+      txt('INCIDENCIA O HECHO OCURRIDO', CX_I+CW_I/2, T3_TOP+4, {bold:true, sz:10, align:'center'});
+      vline(CX_L, T3_TOP, T3_TOP+6, 0.3); vline(CX_I, T3_TOP, T3_TOP+6, 0.3);
+      yT2=T3_TOP+6; yT2Top=T3_TOP+6;
+      continue;
+    }
+    drawRow(inc, yT2, rh); yT2+=rh;
+    pendientes.shift();
+  }
   if(yT2-yT2Top<30) yT2=yT2Top+30;
   drawTablaBorde(yT2Top, yT2);
 
-  // Estadillo
-  drawEstadillo(yT2+3);
-
-  // ── Sección material asignado al final ──────────────────────────────────
-  const hasExtra = p.transmision||p.impresora||p.taser||p.vehiculo||p.formato;
-  if(hasExtra){
-    // Verificar espacio, si no hay añadir nueva sección con línea separadora
-    doc.setFont('helvetica','bold'); doc.setFontSize(10); setTxt(0,0,0);
-    // Buscar posición Y actual del estadillo - añadir al final
-    // Dibujar una línea y la sección
-    const extraItems=[];
-    if(p.vehiculo)     extraItems.push('Vehículo: '+p.vehiculo);
-    if(p.transmision)  extraItems.push('Eq. Transmisión: '+p.transmision);
-    if(p.impresora)    extraItems.push('Impresora: '+p.impresora);
-    if(p.taser)        extraItems.push('Taser: '+p.taser);
-    if(p.formato)      extraItems.push('Formato: '+p.formato);
-    // Los dibujamos en el pie de la pág 1 (bajo la tabla si hay espacio)
-    // o los añadimos como nota en pág 2 tras el estadillo
-    // Por ahora los añadimos en el header de pág 1 como info extra
+  // ── Estadillo: si no cabe completo en la página actual, pasar a una nueva ──
+  const EST_H = 9+22+14+(9*4.8)+2+(6*4.2)+4; // altura aprox necesaria
+  let yEstStart = yT2+3;
+  if(yEstStart + EST_H > FOOTER_Y){
+    doc.addPage();
+    paginaActual++;
+    drawCabecera(paginaActual, 1);
+    yEstStart = 20;
   }
+  const yEstFin = drawEstadillo(yEstStart);
 
-  // ── Observaciones generales ──────────────────────────────────────────────
+  // ── Observaciones generales: justo despues del estadillo, con salto de
+  // página si no hay sitio suficiente ───────────────────────────────────────
   const obsGen = p.obs || '';
   if(obsGen){
-    // Calcular posición Y disponible después del estadillo
-    // Añadir en la parte inferior de pág 2
-    const obsY = 262;
+    doc.setFont('helvetica','normal'); doc.setFontSize(8);
+    const obsLines = doc.splitTextToSize(obsGen, PW-2);
+    const obsAltura = 9 + obsLines.length*4.5;
+    let obsY = yEstFin + 6;
+    if(obsY + obsAltura > FOOTER_Y){
+      doc.addPage();
+      paginaActual++;
+      drawCabecera(paginaActual, 1);
+      obsY = 20;
+    }
     doc.setFont('helvetica','bold'); doc.setFontSize(8); setTxt(...C_NAVY);
     doc.text('OBSERVACIONES:', LM, obsY);
     doc.setFont('helvetica','normal'); doc.setFontSize(8); setTxt(...C_BLACK);
-    const obsLines = doc.splitTextToSize(obsGen, PW-2);
     let oy2 = obsY + 5;
-    obsLines.slice(0,4).forEach(l=>{ doc.text(l, LM, oy2); oy2+=4.5; });
+    obsLines.forEach(l=>{
+      if(oy2 > FOOTER_Y){
+        doc.addPage();
+        paginaActual++;
+        drawCabecera(paginaActual, 1);
+        oy2 = 20;
+      }
+      doc.text(l, LM, oy2); oy2+=4.5;
+    });
   }
 
   // Guardar PDF
