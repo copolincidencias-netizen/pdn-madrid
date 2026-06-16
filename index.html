@@ -1925,6 +1925,20 @@ async function exportarYSubir(){
   } else {
     toast('PDF generado · Se sincronizará cuando haya conexión');
   }
+
+  // Avisar si algún informe (Auxilio/Bomberos/Accidente) no pudo añadirse al PDF
+  if(window._ULTIMO_ERROR_INFORMES && window._ULTIMO_ERROR_INFORMES.length>0){
+    const nombres={auxilio:'Auxilio a Persona',bomberos:'Bomberos',accidente:'Accidente Laboral'};
+    const lista=window._ULTIMO_ERROR_INFORMES.map(t=>nombres[t]||t).join(', ');
+    const detalle=(window._ULTIMO_ERROR_DETALLE||[]).join(' | ');
+    setTimeout(()=>{
+      alert('⚠️ Atención: el PDF se generó, pero no se pudo añadir el informe de: '+lista+
+        '\n\nEsto puede ocurrir si no hay conexión o si el formulario base no está accesible.'+
+        (detalle?('\n\nDetalle técnico: '+detalle):''));
+    }, 500);
+    window._ULTIMO_ERROR_INFORMES = null;
+    window._ULTIMO_ERROR_DETALLE = null;
+  }
 }
 
 
@@ -2634,6 +2648,7 @@ async function generarInformePDF(tipo, datos, indicativo, numsPoliciales) {
     return filledBytes;
   } catch(e) {
     console.error('Error generando informe', tipo, e);
+    window._ULTIMO_ERROR_DETALLE = (window._ULTIMO_ERROR_DETALLE||[]).concat(tipo+': '+(e.message||e.toString()));
     return null;
   }
 }
@@ -2669,6 +2684,7 @@ async function combinarPDFs(partePDFb64, parteData) {
     const nums = [parteData.jefe,parteData.ag2,parteData.ag3,parteData.ag4]
                    .filter(Boolean).join(', ');
     
+    const erroresInformes = [];
     for(const [tipo, datos] of [['auxilio',inf.auxilio],['bomberos',inf.bomberos],['accidente',inf.accidente]]) {
       if(!datos) continue;
       toast(`Añadiendo informe de ${tipo}...`, 'gold');
@@ -2677,7 +2693,12 @@ async function combinarPDFs(partePDFb64, parteData) {
         const informeDoc = await PDFDocument.load(bytes);
         const informePages = await finalDoc.copyPages(informeDoc, informeDoc.getPageIndices());
         informePages.forEach(page => finalDoc.addPage(page));
+      } else {
+        erroresInformes.push(tipo);
       }
+    }
+    if(erroresInformes.length>0){
+      window._ULTIMO_ERROR_INFORMES = erroresInformes;
     }
     
     return await finalDoc.save();
