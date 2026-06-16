@@ -3510,7 +3510,7 @@ async function enviarImagenADNI(dataUrl){
 
     status.textContent = '🔍 Leyendo documento (puede tardar unos segundos)...';
 
-    const result = await Tesseract.recognize(mrzDataUrl, 'spa', {
+    const result = await Tesseract.recognize(mrzDataUrl, 'eng', {
       tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<'
     });
 
@@ -3543,10 +3543,16 @@ function recortarZonaMRZ(dataUrl){
       // Tomar el 35% inferior de la imagen (zona MRZ)
       const cropH = Math.round(img.height * 0.35);
       const cropY = img.height - cropH;
-      canvas.width = img.width;
-      canvas.height = cropH;
+      // Limitar el ancho maximo para acelerar el OCR (la MRZ no necesita alta resolucion)
+      const maxW = 1000;
+      const scale = img.width > maxW ? maxW/img.width : 1;
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(cropH * scale);
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, cropY, img.width, cropH, 0, 0, img.width, cropH);
+      // Aumentar contraste: fondo blanco, mejora la deteccion de texto MRZ
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(img, 0, cropY, img.width, cropH, 0, 0, canvas.width, canvas.height);
       resolve(canvas.toDataURL('image/png'));
     };
     img.onerror = reject;
@@ -3558,54 +3564,97 @@ function recortarZonaMRZ(dataUrl){
 // Linea 1: ESPxxxxxxxxxxxxxxxxxxxxx<NUMSOPORTE<DC
 // Linea 2: AAMMDDsDNACIONALIDADAAMMDDsDsexoDNI<DC<<<<<<<<
 // Linea 3: APELLIDO1<APELLIDO2<<NOMBRE<<<<<<<<<<<<<<<<<<<<
+// Corrige confusiones tipicas del OCR sobre digitos
+function corregirDigitosOCR(s){
+  return s.replace(/O/g,'0').replace(/[IL]/g,'1').replace(/S/g,'5').replace(/B/g,'8').replace(/Z/g,'2');
+}
+
 function parsearMRZ(texto){
   const datos = {nombre:'', dni:'', fechaNacimiento:'', domicilio:'', nacionalidad:'', sexo:''};
 
+  console.log('Texto OCR bruto:', JSON.stringify(texto));
+
   // Limpiar: mayusculas, quedarnos solo con A-Z 0-9 < y saltos de linea
   const limpio = texto.toUpperCase().replace(/[^A-Z0-9<\n]/g,'');
-  const lineas = limpio.split('\n').map(l=>l.trim()).filter(l=>l.length>=20);
+  let lineas = limpio.split('\n').map(l=>l.trim()).filter(l=>l.length>=10);
+  console.log('Lineas detectadas:', lineas);
 
   if(lineas.length === 0) return datos;
 
-  // Buscar linea 3 (nombre/apellidos): contiene multiples '<' y letras, sin digitos relevantes al inicio
-  // Suele ser la ultima linea larga con formato APELLIDOS<<NOMBRE
+  // ── Nombre/apellidos: linea con formato APELLIDOS<<NOMBRE ──────────────────
   for(const linea of lineas){
-    if(/^[A-Z<]{15,}$/.test(linea) && linea.includes('<')){
-      // Separar apellidos y nombre por '<<'
-      const partes = linea.split('<<').filter(Boolean);
+    if(linea.includes('<<') && /[A-Z]{2,}/.test(linea)){
+      const partes = linea.split('<<').map(p=>p.replace(/</g,' ').trim()).filter(Boolean);
       if(partes.length >= 2){
-        const apellidos = partes[0].replace(/</g,' ').trim();
-        const nombre = partes[1].replace(/</g,' ').trim();
-        datos.nombre = (apellidos + ' ' + nombre).replace(/\s+/g,' ').trim();
+        datos.nombre = (partes[0] + ' ' + partes[1]).replace(/\s+/g,' ').trim();
+        break;
+      }
+    }
+  }
+  // Si no se encontro con '<<', probar con un solo '<'
+  if(!datos.nombre){
+    for(const linea of lineas){
+      if(linea.includes('<') && /^[A-Z<]{10,}$/.test(linea)){
+        const limpio2 = linea.replace(/<+/g,' ').trim();
+        if(limpio2.split(' ').length >= 2){ datos.nombre = limpio2; break; }
+      }
+    }
+  }
+
+  // ── Fecha de nacimiento + sexo + nacionalidad ──────────────────────────────
+  // Buscar en cualquier linea un patron de 6 digitos seguido de letra(sexo/control) y 3 letras (nacionalidad)
+  for(const linea of lineas){
+    const corregida = corregirDigitosOCR(linea);
+    // Patron flexible: 6 digitos, luego 1 caracter, luego M/F, luego 3 letras (nacionalidad)
+    const m = corregida.match(/(\d{6})\d?[<]?([MF])([A-Z]{3})/);
+    if(m){
+      const f = m[1];
+      const yy = parseInt(f.substring(0,2));
+      const mm = f.substring(2,4);
+      const dd = f.substring(4,6);
+      // Validar que mes y dia son plausibles
+      if(parseInt(mm)>=1 && parseInt(mm)<=12 && parseInt(dd)>=1 && parseInt(dd)<=31){
+        const yyyy = yy > 30 ? 1900+yy : 2000+yy;
+        datos.fechaNacimiento = dd+'/'+mm+'/'+yyyy;
+        datos.sexo = m[2]==='M' ? 'H' : 'M';
+        datos.nacionalidad = m[3];
         break;
       }
     }
   }
 
-  // Buscar linea 2 (fecha nacimiento, sexo, nacionalidad, DNI)
-  // Formato: AAMMDD + digitoControl + SEXO(M/F) + NACIONALIDAD(3) + AAMMDD(caducidad) + ...
-  for(const linea of lineas){
-    const m = linea.match(/^(\d{6})\d([MF<])([A-Z]{3})/);
-    if(m){
-      const f = m[1]; // AAMMDD
-      const yy = parseInt(f.substring(0,2));
-      const mm = f.substring(2,4);
-      const dd = f.substring(4,6);
-      const yyyy = yy > 30 ? 1900+yy : 2000+yy; // heuristica de siglo
-      datos.fechaNacimiento = dd+'/'+mm+'/'+yyyy;
-      datos.sexo = m[2]==='M' ? 'H' : (m[2]==='F' ? 'M' : '');
-      datos.nacionalidad = m[3];
+  // Si no se encontro con el patron anterior, buscar SOLO 6 digitos consecutivos
+  // validos como fecha al inicio de alguna linea (suele ser la 2a linea MRZ)
+  if(!datos.fechaNacimiento){
+    for(const linea of lineas){
+      const corregida = corregirDigitosOCR(linea);
+      const m = corregida.match(/^(\d{2})(\d{2})(\d{2})/);
+      if(m){
+        const yy=parseInt(m[1]), mm=parseInt(m[2]), dd=parseInt(m[3]);
+        if(mm>=1&&mm<=12&&dd>=1&&dd<=31){
+          const yyyy = yy > 30 ? 1900+yy : 2000+yy;
+          datos.fechaNacimiento = m[3]+'/'+m[2]+'/'+yyyy;
+          break;
+        }
+      }
     }
   }
 
-  // Buscar DNI/NIE: linea 1 suele contener ESP + numero de soporte
-  // El numero de DNI tambien puede aparecer al final de la linea 2
+  // ── DNI/NIE: 8 digitos + letra de control ──────────────────────────────────
   for(const linea of lineas){
-    // Buscar 8-9 digitos seguidos de letra (formato DNI espanol: 12345678A)
-    const m2 = linea.match(/(\d{8})([A-Z])(?=<|$)/);
+    const corregida = corregirDigitosOCR(linea);
+    const m2 = corregida.match(/(\d{8})([A-Z])(?=<|\s|$)/);
     if(m2){
       datos.dni = m2[1]+m2[2];
       break;
+    }
+  }
+  // Fallback: 8 digitos seguidos de letra en cualquier parte
+  if(!datos.dni){
+    for(const linea of lineas){
+      const corregida = corregirDigitosOCR(linea);
+      const m3 = corregida.match(/(\d{8})\s*([A-Z])/);
+      if(m3){ datos.dni = m3[1]+m3[2]; break; }
     }
   }
 
