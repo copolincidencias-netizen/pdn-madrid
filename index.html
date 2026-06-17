@@ -256,6 +256,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
         <div class="hdr-text"><h1>Policía Municipal Madrid</h1><p>PARTE DIARIO DE NOVEDADES
           <span id="conn-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:8px;vertical-align:middle"></span>
           <span id="autosave-ind" style="opacity:0;transition:opacity .3s;font-size:9px;color:var(--gold);margin-left:4px;vertical-align:middle">●guardado</span>
+          <span id="edit-remoto-badge" style="display:none;font-size:9px;color:#1a2744;background:var(--gold);padding:2px 6px;border-radius:8px;margin-left:6px;vertical-align:middle;font-weight:700">✏️ EDITANDO REMOTO</span>
         </p></div>
       </div>
       <div style="display:flex;gap:6px">
@@ -1064,7 +1065,7 @@ const B64_COORD = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfcAAADCCAYAAAB
 
 // ── Estado ────────────────────────────────────────────────────────────────────
 let partes = JSON.parse(localStorage.getItem('pdn_v5')||'[]');
-let editId = null, incN = 0;
+let editId = null, incN = 0, editRemoto = null;
 window.addEventListener('load',()=>{
   setToday();
   addInc();
@@ -1218,6 +1219,8 @@ function guardar(){
 function cargar(id){
   const p=partes.find(x=>x.id===id);if(!p)return;
   editId=p.id;
+  editRemoto=null;
+  actualizarIndicadorEdicion();
   const s=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
   s('f-uni',p.unidad);s('f-pat',p.patrulla);s('f-veh',p.vehiculo);
   s('f-fecha',p.fecha);s('f-turno',p.turno||'');s('f-serv',p.servicio);
@@ -1284,6 +1287,8 @@ function eliminar(id){
 }
 function nuevoF(){
   editId=null;
+  editRemoto=null;
+  actualizarIndicadorEdicion();
   document.getElementById('f-uni').value='C.I.D. ARGANZUELA';
   document.getElementById('f-pat').value='P-02';
   ['f-veh','f-serv','f-jefe','f-ag2','f-ag3','f-ag4','f-transmision','f-impresora','f-taser',
@@ -1954,13 +1959,25 @@ async function exportarYSubir(){
   
   } // fin if ghToken
 
-  // Guardar en Google Sheets
-  toast('Guardando en registro central...','gold');
-  const sheetOk = await guardarEnSheets(p);
-  if(sheetOk){
-    toast('✓ Parte registrado en el sistema','gold');
+  // Guardar en Google Sheets: actualizar si es edicion remota, o crear nuevo
+  if(editRemoto){
+    toast('Actualizando parte en el sistema...','gold');
+    const updOk = await actualizarEnSheets(p, editRemoto);
+    if(updOk){
+      toast('✓ Parte actualizado en el sistema','gold');
+      editRemoto = null;
+      actualizarIndicadorEdicion();
+    } else {
+      toast('⚠️ No se pudo actualizar el registro remoto. PDF generado igualmente.');
+    }
   } else {
-    toast('PDF generado · Se sincronizará cuando haya conexión');
+    toast('Guardando en registro central...','gold');
+    const sheetOk = await guardarEnSheets(p);
+    if(sheetOk){
+      toast('✓ Parte registrado en el sistema','gold');
+    } else {
+      toast('PDF generado · Se sincronizará cuando haya conexión');
+    }
   }
 
   // Avisar si algún informe (Auxilio/Bomberos/Accidente) no pudo añadirse al PDF
@@ -2100,6 +2117,27 @@ let SCRIPT_URL = localStorage.getItem('pdn_script_url') || 'https://script.googl
 const ADMIN_PASS = 'R9277.0.'; // Contraseña administrador
 
 // ── Guardar parte via Apps Script ─────────────────────────────────────────────
+
+// ── Actualizar un parte existente en Sheets (edicion remota) ─────────────────
+async function actualizarEnSheets(p, fechaGuardadoOriginal){
+  if(!SCRIPT_URL){ console.log('Sin URL de script'); return false; }
+  try {
+    const parteJSON = JSON.stringify(p).substring(0, 5000);
+    const params = new URLSearchParams({
+      action: 'actualizar',
+      fechaGuardado: fechaGuardadoOriginal,
+      parte: parteJSON
+    });
+    const url = `${SCRIPT_URL}?${params.toString()}`;
+    const resp = await fetch(url, { method:'GET', redirect:'follow' });
+    const data = await resp.json();
+    return data.ok===true && data.data && data.data.actualizado===true;
+  } catch(e){
+    console.error('Error actualizando en Sheets:', e);
+    return false;
+  }
+}
+
 async function guardarEnSheetsDirecto(p) {
   if(!SCRIPT_URL){ console.log('Sin URL de script'); return false; }
   try {
@@ -2450,12 +2488,34 @@ async function buscarMisPartes(){
       <div class="resumen">${p.resumen||'Sin incidencias registradas'}</div>
       <div class="parte-card-acts">
         <button class="abtn pdf" onclick="verMiPartePDF(${i},${JSON.stringify(partes).length<10000?i:'null'})">↓ PDF</button>
+        <button class="abtn" style="color:var(--gold);border-color:rgba(200,168,75,.3)" onclick="editarMiParte(${i})">✏️ Editar</button>
       </div>
     </div>`;
   }).join('');
   
   // Guardar referencia para acceso
   window._misPartes = partes;
+}
+
+function editarMiParte(idx){
+  try{
+    const item = (window._misPartes||[])[idx];
+    if(!item){ toast('Parte no disponible'); return; }
+    const p = JSON.parse(item.datos||'{}');
+    if(!p || Object.keys(p).length === 0){ toast('Datos del parte no disponibles'); return; }
+    cargar_datos(p, item.fechaGuardado);
+    showF();
+    actualizarIndicadorEdicion();
+    toast('Parte cargado para edición · Al exportar se actualizará','gold');
+  }catch(e){
+    console.error(e);
+    toast('Error al cargar el parte para editar');
+  }
+}
+
+function actualizarIndicadorEdicion(){
+  const el = document.getElementById('edit-remoto-badge');
+  if(el) el.style.display = editRemoto ? 'inline-block' : 'none';
 }
 
 // ── Ver parte en PDF ──────────────────────────────────────────────────────────
@@ -2486,8 +2546,9 @@ function verParteDetalle(idx){
   } catch(e){ toast('Error al cargar parte'); }
 }
 
-function cargar_datos(p){
+function cargar_datos(p, fechaGuardadoRemoto){
   editId=null;
+  editRemoto = fechaGuardadoRemoto || null; // si viene de Mis Partes/Admin: marca edicion remota
   const s=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
   s('f-uni',p.unidad);s('f-pat',p.patrulla);s('f-veh',p.vehiculo);
   s('f-fecha',p.fecha);s('f-turno',p.turno||'');s('f-serv',p.servicio);
@@ -2503,6 +2564,43 @@ function cargar_datos(p){
   (p.oacs||[]).forEach(o=>addOac(o));
   document.getElementById('inc-cont').innerHTML=''; incN=0;
   (p.incidencias||[]).forEach(inc=>addInc(inc));
+
+  // Restaurar informes (Auxilio, Bomberos, Accidente) y reabrir su panel si tenian datos
+  limpiarInformes();
+  if(p.informes && p.informes.auxilio){
+    const a=p.informes.auxilio;
+    s('aux-req',a.req); s('aux-fecha',a.fecha); s('aux-hora',a.hora); s('aux-calle',a.calle);
+    const eH=document.getElementById('aux-herida'); if(eH) eH.checked=!!a.herida;
+    const eE=document.getElementById('aux-enferma'); if(eE) eE.checked=!!a.enferma;
+    s('aux-nombre',a.nombre); s('aux-edad',a.edad); s('aux-dni',a.dni);
+    s('aux-dom',a.dom); s('aux-tel',a.tel); s('aux-asist',a.asist);
+    s('aux-trasl',a.trasl); s('aux-motivo',a.motivo); s('aux-jefe',a.jefe);
+    const btn=document.getElementById('btn-auxilio'); const body=document.getElementById('body-auxilio');
+    if(btn) btn.classList.add('active'); if(body) body.classList.add('open');
+  }
+  if(p.informes && p.informes.bomberos){
+    const b=p.informes.bomberos;
+    s('bom-req',b.req); s('bom-fecha',b.fecha); s('bom-hora',b.hora); s('bom-calle',b.calle);
+    const eV=document.getElementById('bom-viv'); if(eV) eV.checked=!!b.vivienda;
+    const eP=document.getElementById('bom-pas'); if(eP) eP.checked=!!b.pastos;
+    s('bom-parque',b.parque); s('bom-dotac',b.dotac); s('bom-h1',b.h1); s('bom-h2',b.h2);
+    s('bom-titular',b.titular); s('bom-dom',b.dom); s('bom-dni',b.dni);
+    s('bom-tel',b.tel); s('bom-motivo',b.motivo); s('bom-jefe',b.jefe);
+    const btn=document.getElementById('btn-bomberos'); const body=document.getElementById('body-bomberos');
+    if(btn) btn.classList.add('active'); if(body) body.classList.add('open');
+  }
+  if(p.informes && p.informes.accidente){
+    const c=p.informes.accidente;
+    s('acc-nreg',c.nreg); s('acc-natest',c.natest); s('acc-fecha',c.fecha); s('acc-hora',c.hora);
+    s('acc-lugar',c.lugar); s('acc-desc',c.desc); s('acc-nom1',c.nom1); s('acc-dni1',c.dni1);
+    s('acc-tel1',c.tel1); s('acc-dom1',c.dom1); s('acc-les1',c.les1);
+    s('acc-asist1',c.asist1); s('acc-trasl1',c.trasl1); s('acc-tarea1',c.tarea1);
+    s('acc-emp',c.emp); s('acc-nif',c.nif); s('acc-obs',c.obs);
+    s('acc-firma1',c.firma1); s('acc-firma2',c.firma2);
+    const btn=document.getElementById('btn-accidente'); const body=document.getElementById('body-accidente');
+    if(btn) btn.classList.add('active'); if(body) body.classList.add('open');
+  }
+
   const matN=['Linterna','3 Conos','Capuchón','Guía Callejero','Extintor',
     'Señaliz. Alcohol','Triángulos','Carpeta','l Señal luminosa Azul (Veh. Camuflados)'];
   const mat=p.material||[];
