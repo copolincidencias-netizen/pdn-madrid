@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PDN Madrid">
-<link <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="><rect width='100' height='100' rx='15' fill='%231a2744'/><text y='72' x='50' text-anchor='middle' font-size='65' font-family='Arial'>🚔</text></svg>">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
 <title>PDN · Policía Municipal Madrid</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -169,6 +169,15 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
 .hr-btn-clear{background:rgba(255,255,255,.06);color:#e74c3c;border:1px solid rgba(231,76,60,.3)}
 .hr-btn-pdf{background:var(--gold);color:var(--navy-d)}
 .hr-btn-print{background:rgba(255,255,255,.06);color:var(--white);border:1px solid var(--border)}
+.ho-bar{background:#1a3a6b;color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;padding:7px 10px;border-radius:5px;margin:14px 0 8px}
+.ho-note{font-size:10px;color:#667;margin:-2px 0 8px;line-height:1.4}
+.ho-row{display:flex;gap:10px}
+.ho-row>.hr-field{flex:1;min-width:0}
+.ho-chk{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#111;margin:6px 0;font-family:Arial,sans-serif}
+.ho-chk input{width:20px;height:20px;accent-color:#1a3a6b}
+select.hr-input{font-size:12px;padding:4px 2px}
+input[type=date].hr-input,input[type=time].hr-input{font-size:13px;min-height:28px}
+.ho-total{font-weight:700;color:#1a3a6b}
 
 
 .inf-toggle{width:100%;padding:11px 14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--rl);color:var(--white);font-size:13px;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;text-align:left}
@@ -275,6 +284,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
     <button class="tab" id="t-oac" onclick="tab('oac')">EXP. OAC.</button>
     <button class="tab"        id="t-est" onclick="tab('est')">ESTADILLO</button>
     <button class="tab" id="t-rut" onclick="tab('rut')">RUTA</button>
+    <button class="tab" id="t-hor" onclick="tab('hor')">HORAS</button>
     <button class="tab" id="t-inf" onclick="tab('inf')">INFORMES</button>
     <button class="tab" id="t-cie" onclick="tab('cie')">CIERRE</button>
   </div>
@@ -421,6 +431,70 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--n
           <div id="hr-turnos"></div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- TAB HORAS (Anexo 1) -->
+    <div id="tab-hor" style="display:none">
+      <div class="hr-wrap">
+        <div class="hr-btn-row">
+          <button class="hr-btn hr-btn-clear" onclick="hoClear()">🗑 Limpiar</button>
+          <button class="hr-btn hr-btn-pdf"   onclick="hoExportPDF()">↓ Guardar PDF</button>
+          <button class="hr-btn hr-btn-print" onclick="hoPrint()">🖨 Imprimir</button>
+        </div>
+        <div class="hr-card">
+          <div class="hr-card-title">ANEXO 1 · HORAS EXTRAORDINARIAS</div>
+
+          <div class="ho-bar">1.- DATOS DEL SOLICITANTE</div>
+          <div class="hr-field"><span class="hr-label">DNI:</span><input class="hr-input" id="ho-dni" type="text" autocomplete="off"></div>
+          <div class="hr-field"><span class="hr-label">Cargo:</span><input class="hr-input" id="ho-cargo" type="text" value="POLICÍA"></div>
+          <div class="hr-field"><span class="hr-label">Nombre y apellidos:</span><input class="hr-input" id="ho-nombre" type="text"></div>
+          <div class="hr-field"><span class="hr-label">Turno serv. ordinario:</span>
+            <select class="hr-input" id="ho-turno"><option value=""></option><option>MAÑANA</option><option>TARDE</option><option>NOCHE</option></select></div>
+          <label class="ho-chk"><input type="checkbox" id="ho-prol" onchange="hoCalc()"> Servicio realizado en PROLONGACIÓN DE JORNADA</label>
+          <label class="ho-chk"><input type="checkbox" id="ho-libre"> Servicio realizado en DÍA LIBRE</label>
+          <div class="hr-field"><span class="hr-label">Concepto libranza:</span><input class="hr-input" id="ho-concepto" type="text"></div>
+
+          <div class="ho-bar">2.- DATOS DEL SERVICIO ORDINARIO</div>
+          <div class="ho-note">Rellenar únicamente cuando el servicio extraordinario se realice como prolongación de jornada.</div>
+          <div class="hr-field"><span class="hr-label">Fecha:</span><input class="hr-input" id="ho-f2" type="date"></div>
+          <div class="ho-row">
+            <div class="hr-field"><span class="hr-label" style="min-width:0">Comienzo:</span><input class="hr-input" id="ho-h2a" type="time"></div>
+            <div class="hr-field"><span class="hr-label" style="min-width:0">Fin:</span><input class="hr-input" id="ho-h2b" type="time"></div>
+          </div>
+
+          <div class="ho-bar">3.- DATOS DEL SERVICIO EXTRAORDINARIO</div>
+          <div class="ho-note">Prolongación de jornada u horas en día libre.</div>
+          <div class="hr-field"><span class="hr-label">Fecha:</span><input class="hr-input" id="ho-f3" type="date" oninput="hoCalc()"></div>
+          <div class="ho-row">
+            <div class="hr-field"><span class="hr-label" style="min-width:0">Comienzo:</span><input class="hr-input" id="ho-h3a" type="time" oninput="hoCalc()"></div>
+            <div class="hr-field"><span class="hr-label" style="min-width:0">Fin:</span><input class="hr-input" id="ho-h3b" type="time" oninput="hoCalc()"></div>
+          </div>
+          <div class="hr-field"><span class="hr-label">Total horas:</span><input class="hr-input ho-total" id="ho-total" type="text" oninput="this.dataset.man=this.value?'1':''" placeholder="se calcula solo"></div>
+          <div class="hr-field"><span class="hr-label">Motivo:</span><input class="hr-input" id="ho-motivo" type="text"></div>
+          <div class="hr-field"><span class="hr-label">Se solicita:</span>
+            <select class="hr-input" id="ho-solicita"><option value=""></option><option value="ABONO">ABONO</option><option value="TIEMPO LIBRE">DISFRUTE EN TIEMPO LIBRE</option></select></div>
+
+          <div class="ho-bar">4.- ASISTENCIA A JUZGADO</div>
+          <div class="ho-note">Fuera del horario de la jornada laboral. Se abonan 2 h por juicio y 1 h por otras diligencias (sin desplazamiento).</div>
+          <div class="hr-field"><span class="hr-label">Domicilio:</span>
+            <select class="hr-input" id="ho-dom"><option value=""></option><option value="DENTRO">Dentro término municipal</option><option value="FUERA">Fuera término municipal</option></select></div>
+          <div class="hr-field"><span class="hr-label">N.º juicio:</span><input class="hr-input" id="ho-juicio" type="text"></div>
+          <div class="hr-field"><span class="hr-label">Otras diligencias:</span><input class="hr-input" id="ho-otras" type="text"></div>
+          <div class="ho-row">
+            <div class="hr-field"><span class="hr-label" style="min-width:0">Citación:</span><input class="hr-input" id="ho-cit" type="time"></div>
+            <div class="hr-field"><span class="hr-label" style="min-width:0">Fin:</span><input class="hr-input" id="ho-fin" type="time"></div>
+          </div>
+          <div class="hr-field"><span class="hr-label">Ampliación datos:</span><input class="hr-input" id="ho-amp" type="text"></div>
+
+          <div class="ho-bar">5.- SOLICITUD DE DIETAS</div>
+          <label class="ho-chk"><input type="checkbox" id="ho-d10"> Superar 10 horas: MEDIA DIETA</label>
+          <label class="ho-chk"><input type="checkbox" id="ho-d18"> Superar 18 horas: DIETA ENTERA</label>
+
+          <div class="ho-bar">FIRMAS</div>
+          <div class="hr-field"><span class="hr-label">Fecha solicitud:</span><input class="hr-input" id="ho-fsol" type="date"></div>
+          <div class="hr-field"><span class="hr-label">Jefe Arganzuela:</span><input class="hr-input" id="ho-jefe" type="text" placeholder="Fdo. (opcional)"></div>
+        </div>
       </div>
     </div>
 
@@ -1084,7 +1158,7 @@ window.addEventListener('load',()=>{
 });
 
 // ── UI helpers ────────────────────────────────────────────────────────────────
-const TABS=['id','inc','oac','est','rut','inf','cie'];
+const TABS=['id','inc','oac','est','rut','hor','inf','cie'];
 function tab(t){
   TABS.forEach(x=>{
     document.getElementById('tab-'+x).style.display=x===t?'':'none';
@@ -3110,6 +3184,194 @@ function hrPrint(){
   }
   setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
+
+// ===== HORAS EXTRAORDINARIAS (Anexo 1) =====
+const HO_IDS=['dni','cargo','nombre','turno','prol','libre','concepto','f2','h2a','h2b','f3','h3a','h3b','total','motivo','solicita','dom','juicio','otras','cit','fin','amp','d10','d18','fsol','jefe'];
+const HO_FIJOS=['dni','cargo','nombre','turno','jefe'];
+function hoEl(k){return document.getElementById('ho-'+k);}
+function hoGetData(){
+  const d={};
+  HO_IDS.forEach(k=>{const e=hoEl(k);d[k]=!e?'':(e.type==='checkbox'?e.checked:(e.value||'').trim());});
+  return d;
+}
+function hoSave(){try{localStorage.setItem('pdn_horas',JSON.stringify(hoGetData()));}catch(e){}}
+function hoLoad(){
+  try{
+    const d=JSON.parse(localStorage.getItem('pdn_horas')||'null');
+    if(d)HO_IDS.forEach(k=>{const e=hoEl(k);if(!e||d[k]===undefined)return;if(e.type==='checkbox')e.checked=!!d[k];else e.value=d[k];if(k==='total'&&d[k])e.dataset.man='1';});
+  }catch(e){}
+  if(!hoEl('fsol').value)hoEl('fsol').value=new Date().toISOString().slice(0,10);
+  hoCalc(true);
+}
+function hoCalc(noSave){
+  const a=hoEl('h3a').value,b=hoEl('h3b').value,t=hoEl('total');
+  if(a&&b&&!t.dataset.man){
+    const m=x=>{const p=x.split(':');return (+p[0])*60+(+p[1]);};
+    let diff=(m(b)-m(a)+1440)%1440;
+    const h=Math.floor(diff/60),mm=diff%60;
+    t.value=h+' h'+(mm?' '+String(mm).padStart(2,'0')+' min':'');
+  } else if((!a||!b)&&!t.dataset.man){t.value='';}
+  if(noSave!==true)hoSave();
+}
+function hoClear(){
+  if(!confirm('¿Limpiar los datos del servicio? (se mantienen DNI, cargo, nombre y turno)'))return;
+  HO_IDS.forEach(k=>{
+    if(HO_FIJOS.includes(k))return;
+    const e=hoEl(k);if(!e)return;
+    if(e.type==='checkbox')e.checked=false;else e.value='';
+    if(k==='total')e.dataset.man='';
+  });
+  hoEl('fsol').value=new Date().toISOString().slice(0,10);
+  hoSave();
+}
+function hoFmtF(s){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');return m?m[3]+'/'+m[2]+'/'+m[1]:(s||'');}
+function hoFechaLarga(s){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');if(!m)return '';
+  const M=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  return m[3]+' de '+M[+m[2]-1]+' de '+m[1];
+}
+function hoBuildPDFDoc(){
+  const lib=(window.jspdf&&window.jspdf.jsPDF)||(typeof jspdf!=='undefined'&&jspdf.jsPDF);
+  if(!lib){toast('Librería PDF no disponible');return null;}
+  const doc=new lib({orientation:'portrait',unit:'mm',format:'a4'});
+  const d=hoGetData();
+  const LM=12,TW=186,RM=LM+TW,G=[205,205,205];
+  doc.setDrawColor(0,0,0);doc.setLineWidth(0.3);
+  function bx(x,y,w,h,fill){if(fill){doc.setFillColor(fill[0],fill[1],fill[2]);doc.rect(x,y,w,h,'FD');}else doc.rect(x,y,w,h);}
+  function tx(t,x,y,sz,b,al){doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(sz);doc.setTextColor(0,0,0);doc.text(String(t||''),x,y,{align:al||'left'});}
+  function cell(x,y,w,h,t,sz,b,fill){
+    bx(x,y,w,h,fill);
+    const L=Array.isArray(t)?t:[t],lh=sz*0.42,y0=y+h/2-(L.length-1)*lh/2+sz*0.125;
+    L.forEach((s,i)=>tx(s,x+w/2,y0+i*lh,sz,b,'center'));
+  }
+  function val(x,y,w,h,t,sz){
+    bx(x,y,w,h);
+    t=String(t||'');sz=sz||9;
+    doc.setFont('helvetica','normal');
+    while(sz>5){doc.setFontSize(sz);if(doc.getTextWidth(t)<=w-3)break;sz-=0.5;}
+    tx(t,x+1.5,y+h/2+sz*0.125,sz,false);
+  }
+  function chk(x,y,w,h,on){bx(x,y,w,h);if(on)tx('X',x+w/2,y+h/2+1.6,11,true,'center');}
+  function bar(y,t,note){
+    const h=note?9:6;bx(LM,y,TW,h,G);
+    tx(t,LM+TW/2,y+(note?3.9:4.2),9.5,true,'center');
+    if(note)tx(note,LM+TW/2,y+7.4,6,false,'center');
+    return y+h;
+  }
+  // Cabecera
+  try{
+    doc.addImage(B64_IM0,'PNG',LM,6,45,45*194/757,'','FAST');
+    doc.addImage(B64_COORD,'PNG',RM-34,6,34,34*194/503,'','FAST');
+  }catch(e){}
+  tx('ANEXO 1 - IMPRESO SOLICITUD PARA LA COMPENSACIÓN DE',105,25,10,true,'center');
+  tx('HORAS EXTRAORDINARIAS REALIZADAS FUERA DE LA',105,29.5,10,true,'center');
+  tx('JORNADA LABORAL ORDINARIA',105,34,10,true,'center');
+  let y=38;
+  // 1
+  y=bar(y,'1.- DATOS DEL SOLICITANTE');
+  let x=LM;const w1=[28,34,88,36];
+  ['DNI','CARGO','NOMBRE Y APELLIDOS',['TURNO DEL SERVICIO','ORDINARIO']].forEach((t,i)=>{cell(x,y,w1[i],7,t,i===3?6:8.5,true);x+=w1[i];});
+  y+=7;x=LM;
+  [d.dni,d.cargo,d.nombre,d.turno].forEach((t,i)=>{val(x,y,w1[i],8,t,9);x+=w1[i];});
+  y+=8;
+  cell(LM,y,38,12,['SERVICIO','REALIZADO EN:'],8.5,true);
+  cell(LM+38,y,34,12,['PROLONGACIÓN','DE JORNADA'],7.5,true);
+  chk(LM+72,y,12,12,d.prol);
+  cell(LM+84,y,24,12,'DÍA LIBRE',7.5,true);
+  chk(LM+108,y,12,12,d.libre);
+  cell(LM+120,y,66,5,'CONCEPTO DE LA LIBRANZA',6.5,true);
+  val(LM+120,y+5,66,7,d.concepto,8.5);
+  y+=14;
+  // 2
+  y=bar(y,'2.- DATOS DEL SERVICIO ORDINARIO','Rellenar únicamente cuando el servicio extraordinario se realice como prolongación de jornada');
+  cell(LM,y,46,6,'FECHA',9,true);
+  cell(LM+46,y,140,6,'HORARIO DE LA JORNADA ORDINARIA',8.5,true);
+  y+=6;
+  val(LM,y,46,13,hoFmtF(d.f2),10);
+  cell(LM+46,y,70,5,'HORA DE COMIENZO',7,true);cell(LM+116,y,70,5,'HORA DE FINALIZACIÓN',7,true);
+  val(LM+46,y+5,70,8,d.h2a,10);val(LM+116,y+5,70,8,d.h2b,10);
+  y+=15;
+  // 3
+  y=bar(y,'3.- DATOS DEL SERVICIO EXTRAORDINARIO','Prolongación de jornada u horas en día libre');
+  cell(LM,y,46,6,'FECHA',9,true);
+  cell(LM+46,y,94,6,'HORARIO',8.5,true);
+  cell(LM+140,y,46,11,['NÚMERO TOTAL DE','HORAS DEL SERVICIO','EXTRAORDINARIO'],6,true);
+  y+=6;
+  val(LM,y,46,13,hoFmtF(d.f3),10);
+  cell(LM+46,y,47,5,'COMIENZO',7,true);cell(LM+93,y,47,5,'FINALIZACIÓN',7,true);
+  val(LM+46,y+5,47,8,d.h3a,10);val(LM+93,y+5,47,8,d.h3b,10);
+  val(LM+140,y+5,46,8,d.total,10);
+  y+=13;
+  cell(LM,y,26,18,'MOTIVO',9,true,G);
+  bx(LM+26,y,160,18);
+  const ml=doc.setFont('helvetica','normal')&&doc.setFontSize(8.5)&&doc.splitTextToSize(d.motivo||'',156);
+  tx('',0,0,8);doc.setFontSize(8.5);doc.setFont('helvetica','normal');
+  (ml||[]).slice(0,4).forEach((s,i)=>doc.text(s,LM+28,y+5+i*3.8));
+  y+=18;
+  cell(LM,y,100,10,['SE SOLICITA:','Marcar con una X la opción deseada'],8.5,true,G);
+  chk(LM+100,y,20,5,d.solicita==='ABONO');chk(LM+100,y+5,20,5,d.solicita==='TIEMPO LIBRE');
+  cell(LM+120,y,66,5,'ABONO',8,true,G);cell(LM+120,y+5,66,5,'DISFRUTE EN TIEMPO LIBRE',8,true,G);
+  y+=12;
+  // 4
+  y=bar(y,'4.- ASISTENCIA A JUZGADO','Fuera del horario de la jornada laboral');
+  cell(LM,y,40,6,'DOMICILIO',8.5,true);
+  cell(LM+40,y,30,6,'N.º JUICIO',8,true);val(LM+70,y,36,6,d.juicio,8.5);
+  cell(LM+106,y,34,6,'OTRAS DILIGENCIAS',7,true);val(LM+140,y,46,6,d.otras,8.5);
+  const dh=26;
+  cell(LM,y+6,20,dh-6,['DENTRO','TÉRMINO','MUNIC.'],5.5,true);
+  cell(LM+20,y+6,20,dh-6,['FUERA','TÉRMINO','MUNIC.'],5.5,true);
+  if(d.dom==='DENTRO')tx('X',LM+10,y+dh-3,12,true,'center');
+  if(d.dom==='FUERA')tx('X',LM+30,y+dh-3,12,true,'center');
+  bx(LM+40,y+6,146,8);
+  tx('Se abonarán 2 horas por asistencia a juicio y 1 hora por otras diligencias (independientemente del desplazamiento).',LM+42,y+9.3,5.6,false);
+  tx('En aquellos supuestos en los que se superen estos tiempos, se rellenará la casilla "HORA DE FINALIZACIÓN" y se adjuntará el justificante correspondiente.',LM+42,y+12.3,5.6,false);
+  cell(LM+40,y+14,56,12,['HORARIO','No incluir el tiempo de desplazamiento'],7.5,true);
+  cell(LM+96,y+14,46,6,'HORA DE CITACIÓN',7,true);val(LM+142,y+14,44,6,d.cit,9);
+  cell(LM+96,y+20,46,6,'HORA DE FINALIZACIÓN',7,true);val(LM+142,y+20,44,6,d.fin,9);
+  y+=dh;
+  cell(LM,y,40,12,['AMPLIACIÓN','DE DATOS'],8,true);
+  bx(LM+40,y,146,12);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);
+  doc.splitTextToSize(d.amp||'',142).slice(0,3).forEach((s,i)=>doc.text(s,LM+42,y+4.5+i*3.8));
+  y+=14;
+  // 5
+  y=bar(y,'5.- SOLICITUD DE DIETAS');
+  cell(LM,y,166,6.5,'AL SUPERAR UNA JORNADA DE DIEZ HORAS SE SOLICITA MEDIA DIETA',7.5,true);chk(LM+166,y,20,6.5,d.d10);
+  y+=6.5;
+  cell(LM,y,166,6.5,'AL SUPERAR UNA JORNADA DE DIECIOCHO HORAS SE SOLICITA DIETA ENTERA',7.5,true);chk(LM+166,y,20,6.5,d.d18);
+  y+=10;
+  // Firmas
+  const fw=62;
+  ['EL SOLICITANTE','FIRMA DEL JEFE DE TURNO',['V.º B.º','JEFE DE ARGANZUELA']].forEach((t,i)=>{
+    cell(LM+i*fw,y,fw,i===2?10:6,t,8.5,true);
+  });
+  bx(LM,y+6,fw,34);bx(LM+fw,y+6,fw,34);bx(LM+2*fw,y+10,fw,30);
+  tx('Madrid, a '+hoFechaLarga(d.fsol),LM+3,y+11,7,true);
+  tx('Fdo. '+(d.nombre||''),LM+3,y+37,7,true);
+  tx('Fdo.',LM+fw+3,y+37,7,true);
+  tx('Fdo. '+(d.jefe||''),LM+2*fw+3,y+37,7,true);
+  tx('01229.4',LM,y+45,6,false);
+  return doc;
+}
+function hoExportPDF(){
+  const doc=hoBuildPDFDoc();if(!doc)return;
+  const d=hoGetData();
+  doc.save('Anexo1_Horas_'+(hoFmtF(d.f3).replace(/\//g,'-')||'sin_fecha')+'.pdf');
+  toast('Anexo 1 guardado','gold');
+}
+function hoPrint(){
+  const doc=hoBuildPDFDoc();if(!doc)return;
+  const url=URL.createObjectURL(new Blob([doc.output('arraybuffer')],{type:'application/pdf'}));
+  const win=window.open(url,'_blank');
+  if(win){win.addEventListener('load',()=>{win.print();});}
+  else{hoExportPDF();toast('Si no se abre la impresora, usa ↓ Guardar PDF');}
+  setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+(function initHO(){
+  const go=()=>{hoLoad();const t=document.getElementById('tab-hor');
+    if(t){t.addEventListener('input',()=>hoSave());t.addEventListener('change',()=>hoSave());}};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();
+})();
 
 // Inicializar turnos cuando se carga la pestaña RUTA
 (function initHR(){
